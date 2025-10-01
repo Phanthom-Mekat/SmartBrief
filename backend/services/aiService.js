@@ -32,7 +32,7 @@ const getSummary = async (text, options = {}) => {
 
     // Get the model
     const model = genAI.getGenerativeModel({ 
-      model: options.model || 'gemini-1.5-flash',
+      model: options.model || 'gemini-1.5-flash-latest',
       generationConfig: {
         temperature: 0.3, // Lower temperature for more focused summaries
         topK: 40,
@@ -106,14 +106,26 @@ Summary:`;
 /**
  * Generate a simple fallback summary when AI service fails
  * @param {string} text - Original text
- * @returns {string} - Fallback summary
+ * @returns {Object} - Fallback summary with statistics
  */
 const generateFallbackSummary = (text) => {
   const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
   const summaryLength = Math.max(1, Math.floor(sentences.length * 0.3));
   const selectedSentences = sentences.slice(0, summaryLength);
+  const summary = selectedSentences.join('. ').trim() + (selectedSentences.length > 0 ? '.' : '');
   
-  return selectedSentences.join('. ').trim() + (selectedSentences.length > 0 ? '.' : '');
+  // Calculate word counts
+  const originalWordCount = text.trim().split(/\s+/).length;
+  const summaryWordCount = summary.trim().split(/\s+/).length;
+  const compressionRatio = Math.round((summaryWordCount / originalWordCount) * 100);
+  
+  return {
+    summary: summary,
+    originalWordCount,
+    summaryWordCount,
+    compressionRatio,
+    isFallback: true
+  };
 };
 
 /**
@@ -148,7 +160,7 @@ const validateContent = (content) => {
 const getServiceStatus = () => {
   return {
     isConfigured: !!process.env.GEMINI_API_KEY,
-    model: 'gemini-1.5-flash',
+    model: 'gemini-1.5-flash-latest',
     maxInputLength: 50000,
     minInputLength: 50,
     supportedFormats: ['text/plain'],

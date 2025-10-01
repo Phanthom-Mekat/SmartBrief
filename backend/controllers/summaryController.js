@@ -1,6 +1,7 @@
 const Summary = require('../models/Summary');
 const User = require('../models/User');
 const { getSummary, validateContent } = require('../services/aiService');
+const { setCache, isRedisConnected } = require('../config/redisClient');
 
 /**
  * @desc    Create a new summary
@@ -37,8 +38,22 @@ const createSummary = async (req, res) => {
 
     // Generate summary using AI service
     let summarizedContent;
+    let summaryStats = {};
     try {
-      summarizedContent = await getSummary(content);
+      const result = await getSummary(content);
+      
+      // Handle both string and object returns (for fallback)
+      if (typeof result === 'string') {
+        summarizedContent = result;
+      } else if (result && typeof result === 'object') {
+        // Fallback summary returns an object with stats
+        summarizedContent = result.summary;
+        summaryStats = {
+          originalWordCount: result.originalWordCount,
+          summaryWordCount: result.summaryWordCount,
+          compressionRatio: result.compressionRatio
+        };
+      }
     } catch (aiError) {
       console.error('AI summarization failed:', aiError.message);
       return res.status(503).json({
@@ -53,7 +68,8 @@ const createSummary = async (req, res) => {
       user: userId,
       originalContent: content,
       summarizedContent,
-      processingTime: Date.now() - startTime
+      processingTime: Date.now() - startTime,
+      ...summaryStats  // Include pre-calculated stats if available
     });
 
     // Save summary to database
@@ -65,20 +81,41 @@ const createSummary = async (req, res) => {
 
     console.log(`Summary created successfully for user ${user.name}. Credits remaining: ${user.credits}`);
 
+    // Prepare response data
+    const summaryData = {
+      id: summary._id,
+      originalWordCount: summary.originalWordCount,
+      summaryWordCount: summary.summaryWordCount,
+      compressionRatio: summary.compressionRatio,
+      summarizedContent: summary.summarizedContent,
+      processingTime: summary.processingTime,
+      createdAt: summary.createdAt,
+      aiModel: summary.aiModel,
+      status: summary.status
+    };
+
+    // Cache the result if Redis is connected and cache key is available
+    if (isRedisConnected() && req.cacheKey) {
+      const cacheSuccess = await setCache(
+        req.cacheKey,
+        summaryData,
+        86400 // 24 hours in seconds
+      );
+      
+      if (cacheSuccess) {
+        console.log(`✓ Summary cached with key: ${req.cacheKey.substring(0, 40)}...`);
+      } else {
+        console.warn('⚠ Failed to cache summary result');
+      }
+    }
+
     // Return success response with summary data
     res.status(201).json({
       success: true,
       message: 'Summary created successfully',
+      fromCache: false,
       data: {
-        summary: {
-          id: summary._id,
-          originalWordCount: summary.originalWordCount,
-          summaryWordCount: summary.summaryWordCount,
-          compressionRatio: summary.compressionRatio,
-          summarizedContent: summary.summarizedContent,
-          processingTime: summary.processingTime,
-          createdAt: summary.createdAt
-        },
+        summary: summaryData,
         user: {
           creditsRemaining: user.credits,
           creditsUsed: 1

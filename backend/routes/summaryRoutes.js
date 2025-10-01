@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, checkCredits } = require('../middleware/authMiddleware');
+const { cacheMiddleware } = require('../middleware/cacheMiddleware');
 const {
   createSummary,
   getUserSummaries,
@@ -12,8 +13,17 @@ const {
  * @route   POST /api/summaries
  * @desc    Create a new AI-generated summary
  * @access  Private (requires authentication and 1 credit)
+ * @middleware  protect -> cacheMiddleware -> checkCredits(1) -> createSummary
+ * 
+ * Flow:
+ * 1. protect: Verify JWT and attach user to request
+ * 2. cacheMiddleware: Check if summary exists in Redis cache
+ *    - If cache HIT: Return cached result immediately (no credit charge)
+ *    - If cache MISS: Continue to next middleware
+ * 3. checkCredits(1): Verify user has at least 1 credit
+ * 4. createSummary: Generate new summary, deduct credit, cache result
  */
-router.post('/', protect, checkCredits(1), createSummary);
+router.post('/', protect, cacheMiddleware, checkCredits(1), createSummary);
 
 /**
  * @route   GET /api/summaries
