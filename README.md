@@ -1,747 +1,258 @@
-# SmartBrief - AI-Powered Content Summarization SaaS
+# SmartBrief - AI-Powered Content Summarization
 
-## 🚀 Project Overview
+> Full-stack MERN SaaS application with role-based access control, AI summarization, and credit system.
 
-SmartBrief is a full-stack MERN application that leverages AI to provide intelligent content summarization services. Users can paste text or upload documents to receive concise, accurate summaries powered by advanced AI models.
-
----
-
-## 🔑 **TEST CREDENTIALS (Login Immediately!)**
-
-### 🛡️ **1. ADMIN USER** (Full Access)
-```
-Email:    admin@smartbrief.com
-Password: Admin123!
-Role:     admin
-Credits:  100
-Access:   Full system access, user management, credit recharge, role changes
-```
-
-### ✏️ **2. EDITOR USER** (Can Edit Any Summary)
-```
-Email:    editor@smartbrief.com
-Password: editor123
-Role:     editor
-Credits:  20
-Access:   Can view, edit, and delete ANY summary from any user
-```
-
-### 👁️ **3. REVIEWER USER** (Review Summaries)
-```
-Email:    reviewer@smartbrief.com
-Password: reviewer123
-Role:     reviewer
-Credits:  15
-Access:   Can review summaries (approve/reject/request revision), view all summaries
-```
-
-### 👤 **4. REGULAR USER** (Own Summaries Only)
-```
-Email:    user@smartbrief.com
-Password: user123
-Role:     user
-Credits:  10
-Access:   Can only create, view, edit, and delete own summaries
-```
-
-### 🎯 **5. DEMO USER** (Testing Account)
-```
-Email:    demo@smartbrief.com
-Password: demo123
-Role:     user
-Credits:  5
-Access:   Standard user with default free credits
-```
+**Live Demo**: [https://aismartbrief.vercel.app](https://aismartbrief.vercel.app)
 
 ---
 
-## 📋 Features Implemented ✅
+## 🔑 Test Credentials
 
-### ✅ **1. Authentication (JWT-based)** - COMPLETE
-- ✅ User registration and login with JWT tokens
-- ✅ Password hashing with bcrypt
-- ✅ 7-day token expiration
-- ✅ Protected routes with authentication middleware
-- ✅ Secure HTTP-only cookie support
-- ❌ Email verification (optional - not implemented)
-
-### ✅ **2. Dynamic User Roles & Permissions** - COMPLETE
-- ✅ **4 Roles Implemented:** `user`, `admin`, `editor`, `reviewer`
-- ✅ **Admin:** Full system access, user management, credit recharge, role changes
-- ✅ **Editor:** Can view, edit, and delete ANY summary
-- ✅ **Reviewer:** Can review summaries (approve/reject/revision), view all
-- ✅ **User:** Can only manage own summaries
-- ✅ Role-based access control (RBAC) middleware
-- ✅ Role badges in UI
-- ✅ Permission checks on frontend and backend
-
-### ✅ **3. Credit System** - COMPLETE
-- ✅ New users start with **5 free credits**
-- ✅ Each summarization costs **1 credit**
-- ✅ Admin can recharge credits via dashboard (with SweetAlert2 input)
-- ✅ Real-time credit display on dashboard
-- ✅ Credit validation middleware
-- ✅ Prevents summarization when credits = 0
-- ✅ **Regeneration is FREE** (no credit charge)
-
-### ✅ **4. AI Summarization** - COMPLETE
-- ✅ Integrated **Groq API** with `llama-3.3-70b-versatile` model
-- ✅ Accepts text input (100-50,000 characters)
-- ✅ File upload support (`.txt` and `.docx` files)
-- ✅ Intelligent summarization with compression ratio tracking
-- ✅ **Re-prompt feature:** Regenerate summaries with custom prompts (FREE!)
-- ✅ Edit prompts before regeneration
-- ✅ Word count and compression statistics
-- ✅ Error handling and validation
-
-### ✅ **5. Redux State Management** - COMPLETE
-- ✅ **Redux Toolkit** for centralized state management
-- ✅ `authSlice` - User authentication state
-- ✅ `summarySlice` - Summary management with async thunks
-- ✅ Credit tracking and real-time updates
-- ✅ Persistent login (localStorage)
-- ✅ Global error handling
-
-### ✅ **6. Summary Management** - COMPLETE
-- ✅ View personal summary history with pagination
-- ✅ Display timestamps, word counts, and compression ratios
-- ✅ Regenerate summaries with custom prompts (FREE)
-- ✅ Edit summary content (for editors/admins)
-- ✅ Delete summaries with confirmation
-- ✅ Role-based permissions enforced
-- ✅ Expandable summary cards
-- ✅ Status badges (processing, completed, failed)
-
-### ✅ **7. Caching (Redis)** - COMPLETE
-- ✅ Redis-based caching for repeated queries
-- ✅ Cache summaries per user and prompt combination
-- ✅ Automatic cache invalidation on delete
-- ✅ Cache TTL (Time To Live) configuration
-- ✅ Reduces API calls and improves performance
-- ✅ Fallback to database if cache miss
-
-### ✅ **8. Background Worker System** - COMPLETE
-- ✅ **Bull Queue** for background job processing
-- ✅ **Bull Board** dashboard at `/admin/queues`
-- ✅ Three separate queues:
-  - `summarization` - Text summarization jobs
-  - `file-processing` - File upload processing
-  - `email` - Email notifications (placeholder)
-- ✅ Async endpoints with job ID return
-- ✅ Job status polling (pending, processing, completed, failed)
-- ✅ Progress tracking and error handling
-- ✅ Retry logic for failed jobs
-
-### ✅ **9. Cron Jobs** - COMPLETE
-- ✅ **node-cron** for scheduled tasks
-- ✅ Daily cron job (midnight UTC) to deactivate inactive users (7+ days)
-- ✅ Excludes admin users from automatic deactivation
-- ✅ Graceful shutdown support
-- ✅ Manual execution support for testing
+| Role | Email | Password | Credits | Access Level |
+|------|-------|----------|---------|--------------|
+| 🛡️ **Admin** | admin@smartbrief.com | Admin123! | 100 | Full system access, manage users, recharge credits |
+| ✏️ **Editor** | editor@smartbrief.com | editor123 | 20 | Edit/delete any summary from any user |
+| 👁️ **Reviewer** | reviewer@smartbrief.com | reviewer123 | 15 | Review summaries (approve/reject/revision) |
+| 👤 **User** | user@smartbrief.com | user123 | 10 | Manage own summaries only |
+| 🎯 **Demo** | demo@smartbrief.com | demo123 | 5 | Standard user account |
 
 ---
-
-## 🎁 **BONUS FEATURES IMPLEMENTED**
-
-### ✅ **10. Review System** - COMPLETE ⭐
-- ✅ **Reviewer Dashboard** - Dedicated interface for reviewers
-- ✅ **Review Actions:**
-  - ✅ Approve summaries
-  - ✅ Reject summaries with comments
-  - ✅ Request revision with feedback
-- ✅ **Review History Tracking** - Complete audit trail
-- ✅ **Reviewer Statistics** - Performance metrics
-- ✅ **SweetAlert2 Integration** - Beautiful confirmation dialogs
-- ✅ **Review Status Badges** - Visual feedback (pending, approved, rejected, needs_revision)
-- ✅ **5 API Endpoints:**
-  - `GET /api/reviews/pending` - Get summaries for review
-  - `POST /api/reviews/:id/submit` - Submit review
-  - `GET /api/reviews/:id/history` - Get review history
-  - `GET /api/reviews/stats` - Get reviewer statistics
-  - `POST /api/reviews/bulk-update` - Bulk update (admin)
-
-### ✅ **11. Enhanced UI/UX** - COMPLETE ⭐
-- ✅ **Modern Dashboard Design** - Gradient backgrounds, hover effects
-- ✅ **SweetAlert2 Dialogs** - Professional confirmation dialogs
-- ✅ **Role-based Dropdowns** - Visual role selection with icons
-- ✅ **Responsive Design** - Mobile-friendly layouts
-- ✅ **Loading States** - Skeleton loaders and spinners
-- ✅ **shadcn/ui Components** - Professional component library
-- ✅ **Tailwind CSS** - Modern utility-first styling
-- ✅ **Lucide Icons** - Beautiful icon set
-
-### ✅ **12. Admin Dashboard Enhancements** - COMPLETE ⭐
-- ✅ **User Management Table** - View all users
-- ✅ **Credit Recharge** - Add credits with SweetAlert2 input
-- ✅ **Role Management** - Change roles with dropdown menu
-- ✅ **User Deletion** - Delete users with confirmation
-- ✅ **Summary Management** - Edit and delete any summary
-- ✅ **Statistics Cards** - Total users, summaries, credits, admins
-- ✅ **Two-tab Interface** - Users and Summaries tabs
 
 ## 🛠️ Tech Stack
 
-### Backend
-- **Node.js** + **Express.js**
-- **MongoDB** (MongoDB Atlas) with Mongoose
-- **JWT** for authentication
-- **Redis** for caching
-- **Bull** + **Bull Board** for job queues
-- **Groq SDK** for AI summarization
-- **node-cron** for scheduled tasks
-- **Multer** for file uploads
-- **Mammoth** for .docx parsing
+### **Backend** (`Node.js` + `Express.js`)
+| Technology | Library/Tool | Purpose |
+|-----------|-------------|---------|
+| **Database** | `MongoDB Atlas` + `Mongoose` | Document database with ODM |
+| **Authentication** | `jsonwebtoken` + `bcrypt` | JWT tokens & password hashing |
+| **Caching** | `Redis` + `redis` client | Response caching & session storage |
+| **Background Jobs** | `Bull` + `Bull Board` | Job queues & queue monitoring |
+| **AI Integration** | `Groq SDK` | gpt-oss-120B AI summarization |
+| **Task Scheduler** | `node-cron` | Scheduled tasks (user deactivation) |
+| **File Upload** | `Multer` | Multipart/form-data handling |
+| **File Processing** | `Mammoth` | .docx to text conversion |
+| **HTTP Client** | `Axios` | API requests |
+| **Validation** | Custom middleware | Input validation & sanitization |
 
-### Frontend
-- **React 19.1.1** with Vite
-- **Redux Toolkit** for state management
-- **React Router Dom** for routing
-- **Axios** for API calls
-- **shadcn/ui** components
-- **Tailwind CSS** for styling
-- **Lucide React** for icons
+### **Frontend** (`React` + `Vite`)
+| Technology | Library/Tool | Purpose |
+|-----------|-------------|---------|
+| **UI Framework** | `React 19.1.1` | Component-based UI |
+| **Build Tool** | `Vite` | Fast dev server & bundler |
+| **State Management** | `Redux Toolkit` + `react-redux` | Global state with slices |
+| **Routing** | `React Router Dom` | Client-side routing |
+| **HTTP Client** | `Axios` | API communication |
+| **UI Components** | `shadcn/ui` | Accessible component library |
+| **Styling** | `Tailwind CSS` | Utility-first CSS framework |
+| **Icons** | `Lucide React` | Beautiful icon set |
+| **Notifications** | `SweetAlert2` | Custom alerts & dialogs |
+| **Forms** | React hooks | Form state management |
+
+### **Deployment** (Serverless)
+| Platform | Purpose |
+|----------|---------|
+| **Vercel** | Backend API (serverless functions) |
+| **Vercel** | Frontend hosting (static) |
+| **MongoDB Atlas** | Cloud database |
+| **Upstash Redis** (optional) | Serverless Redis |
+
+---
+
+## ✨ Core Features
+
+### 🔐 **Authentication** (`JWT` + `bcrypt`)
+- User registration & login with JWT tokens
+- Password hashing & 7-day token expiration
+- Protected routes with auth middleware
+
+### 👥 **Role-Based Access Control** (Custom RBAC)
+| Role | Permissions |
+|------|------------|
+| 🛡️ **Admin** | Full access: manage users, recharge credits, change roles |
+| ✏️ **Editor** | Edit/delete ANY summary from any user |
+| 👁️ **Reviewer** | Approve/reject/request revision on summaries |
+| 👤 **User** | Manage only their own summaries |
+
+### 💳 **Credit System** (Custom Implementation)
+- New users get **5 free credits**
+- 1 credit per summarization
+- **FREE regeneration** with custom prompts
+- Admin can recharge credits via dashboard
+
+### 🤖 **AI Summarization** (`Groq API` - Llama 3.3)
+- Text input: 100-50,000 characters
+- File upload: `.txt` and `.docx` support
+- Compression ratio tracking
+- Custom prompt regeneration
+
+### 📦 **State Management** (`Redux Toolkit`)
+- `authSlice` - Authentication state
+- `summarySlice` - Summary management with async thunks
+- Persistent login via localStorage
+
+### 💾 **Caching** (`Redis`)
+- Cache summaries per user/content hash
+- Automatic cache invalidation
+- 24-hour TTL (Time To Live)
+- Fallback to database on cache miss
+
+### ⚙️ **Background Jobs** (`Bull` queues - *Disabled in serverless*)
+- Text summarization queue
+- File processing queue  
+- Email notifications queue
+- Job monitoring via Bull Board
+
+### ⏰ **Scheduled Tasks** (`node-cron` - *Disabled in serverless*)
+- Daily: Deactivate inactive users (7+ days)
+- Excludes admin users
+
+### ⭐ **Bonus: Review System** (Custom)
+- Reviewer dashboard with pending reviews
+- Approve/reject/request revision actions
+- Complete review history audit trail
+- Reviewer performance statistics
 
 ## 📁 Project Structure
 
 ```
-ai-powered-content-summarization/
-├── backend/
-│   ├── config/
-│   │   ├── fileUpload.js      # Multer configuration
-│   │   ├── queue.js            # Bull queue setup + Bull Board
-│   │   ├── redisClient.js      # Redis connection
-│   ├── controllers/
-│   │   ├── adminController.js  # Admin operations
-│   │   ├── authController.js   # Authentication
-│   │   ├── summaryController.js # Summary CRUD + async operations
-│   ├── middleware/
-│   │   ├── authMiddleware.js   # JWT auth + RBAC + credit check
-│   │   ├── cacheMiddleware.js  # Redis caching
-│   ├── models/
-│   │   ├── Summary.js          # Summary schema
-│   │   ├── User.js             # User schema with roles
-│   ├── routes/
-│   │   ├── adminRoutes.js      # Admin endpoints
-│   │   ├── auth.js             # Auth endpoints
-│   │   ├── summaryRoutes.js    # Summary endpoints
-│   │   ├── testRoutes.js       # Test/demo endpoints
-│   ├── services/
-│   │   ├── aiService.js        # Groq API integration
-│   │   ├── cronService.js      # Cron job schedules
-│   │   ├── fileProcessor.js    # File text extraction
-│   │   ├── queueService.js     # Bull queue operations
-│   ├── workers/
-│   │   ├── index.js            # Worker process entry
-│   │   ├── summarizationWorker.js
-│   │   ├── fileProcessingWorker.js
-│   │   ├── emailWorker.js
-│   ├── createAdmin.js          # Admin user creation script
-│   ├── index.js                # Main server file
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/         # React components
-│   │   ├── pages/              # Page components
-│   │   ├── redux/              # Redux store & slices
-│   │   ├── services/           # API service layer
-│   │   ├── router/             # React Router config
-│   │   └── main.jsx            # App entry point
-│   └── package.json
-└── README.md
+backend/
+├── config/          # Configuration (Redis, queues, file upload)
+├── controllers/     # Request handlers (auth, summary, admin, review)
+├── middleware/      # Auth, RBAC, caching, credit validation
+├── models/          # MongoDB schemas (User, Summary)
+├── routes/          # API routes
+├── services/        # Business logic (AI, cron, file processing)
+├── workers/         # Background job processors
+└── index.js         # Main entry (serverless-compatible)
+
+frontend/
+├── src/
+│   ├── components/  # Reusable UI components
+│   ├── pages/       # Route pages (Dashboard, Admin, etc.)
+│   ├── redux/       # Redux store & slices
+│   ├── services/    # API service layer
+│   └── router/      # React Router config
+└── package.json
 ```
 
-## 🚀 Setup Instructions
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (v18+)
-- MongoDB (local or Atlas)
-- Redis (local or cloud)
-- Groq API Key ([Get one here](https://console.groq.com/keys))
+- Node.js 18+
+- MongoDB Atlas account
+- Groq API Key ([Get free key](https://console.groq.com/keys))
 
 ### Backend Setup
 
-1. **Navigate to backend directory:**
-   ```bash
-   cd backend
-   ```
+```bash
+cd backend
+npm install
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+# Create .env file
+cat > .env << EOL
+MONGO_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_64_char_secret_key
+GROQ_API_KEY=your_groq_api_key
+NODE_ENV=development
+EOL
 
-3. **Create `.env` file:**
-   ```env
-   # Server
-   PORT=5000
-   
-   # MongoDB
-   MONGO_URI=your_mongodb_connection_string
-   
-   # JWT
-   JWT_SECRET=your_super_secret_jwt_key_here
-   
-   # Groq API
-   GROQ_API_KEY=your_groq_api_key
-   
-   # Redis (optional but recommended)
-   REDIS_HOST=localhost
-   REDIS_PORT=6379
-   # REDIS_PASSWORD=your_redis_password  # Uncomment if needed
-   ```
+# Create admin user
+node createAdmin.js
 
-4. **Create first admin user:**
-   ```bash
-   node createAdmin.js
-   ```
-   Default credentials:
-   - Email: `admin@smartbrief.com`
-   - Password: `Admin123!`
-   
-   **⚠️ IMPORTANT:** Change this password after first login!
-
-5. **Start Redis (if local):**
-   ```bash
-   # Windows (with Redis installed)
-   redis-server
-   
-   # macOS/Linux
-   redis-server
-   ```
-
-6. **Start the API server:**
-   ```bash
-   npm run dev
-   ```
-   Server will run on `http://localhost:5000`
-
-7. **Start the worker process (in a separate terminal):**
-   ```bash
-   npm run worker:dev
-   ```
-
-8. **Access Bull Board (Queue Dashboard):**
-   Open `http://localhost:5000/admin/queues` in your browser
+# Start server
+npm run dev
+```
 
 ### Frontend Setup
 
-1. **Navigate to frontend directory:**
-   ```bash
-   cd frontend
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Create `.env` file:**
-   ```env
-   VITE_API_URL=http://localhost:5000/api
-   ```
-
-4. **Start development server:**
-   ```bash
-   npm run dev
-   ```
-   Frontend will run on `http://localhost:5173`
-
-## 👥 How to Create Test Users
-
-### Option 1: Run Test User Creation Script (Recommended)
 ```bash
-cd backend
-node createTestUsers.js
-```
-This will create all 4 test users automatically.
+cd frontend
+npm install
 
-### Option 2: Verify Existing Credentials
+# Create .env file
+echo "VITE_API_URL=https://aismartbrief.vercel.app/api" > .env
+
+# Start dev server
+npm run dev
+```
+
+Visit `http://localhost:5173` and login with test credentials above.
+
+---
+
+## 📋 Key API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login & get JWT token
+- `GET /api/auth/me` - Get current user
+
+### Summaries
+- `POST /api/summaries` - Create summary (sync, -1 credit)
+- `POST /api/summaries/upload` - Upload & summarize file
+- `GET /api/summaries` - Get user's summaries (paginated)
+- `POST /api/summaries/:id/regenerate` - **FREE** regeneration
+- `DELETE /api/summaries/:id` - Delete summary
+
+### Admin (Admin only)
+- `GET /api/admin/users` - Get all users
+- `PUT /api/admin/users/:id/recharge` - Add credits
+- `PUT /api/admin/users/:id/role` - Change role
+- `DELETE /api/admin/users/:id` - Delete user
+
+### Reviews (Reviewer/Admin)
+- `GET /api/reviews/pending` - Get pending reviews
+- `POST /api/reviews/:id/submit` - Approve/reject/revision
+
+---
+
+## 🎯 **Quick Test Guide**
+
+1. **Login** → Use any test credential above
+2. **Create Summary** → Paste text or upload file (`.txt`/`.docx`)
+3. **View History** → See all your summaries with stats
+4. **Regenerate** → Try custom prompts (FREE, no credit charge!)
+5. **Admin** → Manage users, recharge credits, change roles
+6. **Reviewer** → Approve/reject/request revision on summaries
+
+
+
+---
+
+## 📜 Available Scripts
+
+**Backend:**
 ```bash
-cd backend
-node testCredentials.js
+npm run dev              # Development server (serverless mode)
+npm run dev:local        # Development with full features (queues, cron)
+npm run diagnose         # Test configuration
+node createAdmin.js      # Create admin user
 ```
-This will test all credentials and show their status.
 
-### Option 3: Manual Registration
-1. Go to `http://localhost:5173/register`
-2. Register a new user
-3. Login with admin account
-4. Go to Admin Dashboard
-5. Change the new user's role as needed
+**Frontend:**
+```bash
+npm run dev              # Start dev server
+npm run build            # Production build
+```
 
 ---
 
-## 🎯 **Quick Start Guide**
+## ⚠️ Important Notes
 
-### Step 1: Login with Admin
-1. Open `http://localhost:5173/login`
-2. Use credentials: `admin@smartbrief.com` / `Admin123!`
-3. You'll see "Admin Panel" link in navbar
+### Serverless Deployment (Current)
+- ✅ Backend hosted on Vercel
+- ✅ MongoDB Atlas database
+- ❌ Redis/Bull queues disabled (not needed)
+- ❌ Cron jobs disabled (use Vercel Cron if needed)
 
-### Step 2: Explore Admin Dashboard
-1. Click "Admin Panel" or visit `http://localhost:5173/admin`
-2. **Users Tab:**
-   - View all registered users
-   - Recharge credits (click 💰 button)
-   - Change user roles (click 👤 button) - **Beautiful dropdown menu!**
-   - Delete users (click 🗑️ button)
-3. **Summaries Tab:**
-   - View all summaries from all users
-   - Expand to see full content
-   - Edit any summary
-   - Delete any summary
+### Security
+- 🔒 Change admin password after first login
+- 🔒 Use strong JWT_SECRET (64+ characters)
+- 🔒 Enable HTTPS in production
+- 🔒 Never commit `.env` files
 
-### Step 3: Test Reviewer Features
-1. Logout and login as `reviewer@smartbrief.com` / `reviewer123`
-2. You'll see "Review Dashboard" link in navbar
-3. Visit `http://localhost:5173/reviewer` or click the link
-4. **Three Tabs Available:**
-   - **Pending Reviews:** Summaries waiting for review
-   - **All Summaries:** View all summaries in system
-   - **My Summaries:** Your own summaries
-5. **Review Actions:**
-   - ✅ **Approve** - Mark summary as approved
-   - 🔄 **Request Revision** - Ask for improvements with comments
-   - ❌ **Reject** - Reject with feedback
-   - 📜 **View History** - See complete review audit trail
-6. **Beautiful SweetAlert2 dialogs for all actions!**
-
-### Step 4: Test Editor Permissions
-1. Logout and login as `editor@smartbrief.com` / `editor123`
-2. Create your own summaries
-3. Go to History page
-4. You can see ALL summaries (not just yours)
-5. Edit and delete ANY summary from any user
-
-### Step 5: Test Regular User
-1. Logout and login as `user@smartbrief.com` / `user123`
-2. Create summaries
-3. Go to History page
-4. You can only see YOUR summaries
-5. Cannot edit/delete others' summaries
-
----
-
-## 🧪 **Testing Features Checklist**
-
-### Authentication & Roles
-- [x] Register new user
-- [x] Login with all 5 test accounts
-- [x] Verify role badges show correctly
-- [x] Test protected routes redirect to login
-- [x] Logout and session cleanup
-
-### Credit System
-- [x] New user starts with 5 credits
-- [x] Credit deduction after summarization
-- [x] Prevent summarization when credits = 0
-- [x] Admin can recharge credits (SweetAlert2 input)
-- [x] Regeneration doesn't consume credits
-
-### AI Summarization
-- [x] Paste text and summarize
-- [x] Upload `.txt` file and summarize
-- [x] Upload `.docx` file and summarize
-- [x] View word count and compression ratio
-- [x] Regenerate with custom prompt (FREE)
-- [x] Edit prompt before regeneration
-
-### Summary Management
-- [x] View history (paginated)
-- [x] Expand/collapse summary cards
-- [x] Edit summary (editor/admin only)
-- [x] Delete summary with confirmation
-- [x] See timestamps and stats
-
-### Review System (NEW!)
-- [x] Login as reviewer
-- [x] View pending reviews
-- [x] Approve summary
-- [x] Reject with comments
-- [x] Request revision with feedback
-- [x] View review history
-- [x] Check reviewer statistics
-- [x] SweetAlert2 dialogs work perfectly
-
-### Admin Dashboard
-- [x] View all users table
-- [x] Recharge credits (SweetAlert2 input)
-- [x] Change roles (SweetAlert2 dropdown with icons)
-- [x] Delete users (SweetAlert2 confirmation)
-- [x] View statistics cards
-- [x] Edit any summary
-- [x] Delete any summary
-
-### Background Workers
-- [x] Create async summary (returns job ID)
-- [x] Poll job status
-- [x] Upload file async
-- [x] Visit Bull Board at `/admin/queues`
-- [x] Monitor queue progress
-
-### Caching
-- [x] Create summary (check logs for cache miss)
-- [x] Regenerate same summary (check logs for cache hit)
-- [x] Delete summary (check logs for cache invalidation)
-
-### Cron Jobs
-- [x] Manual test: `node -e "require('./services/cronService').deactivateInactiveUsers()"`
-- [x] Wait until midnight UTC (or change cron schedule for testing)
-- [x] Check logs for execution
-
-## 🔑 **API Endpoints Reference**
-
-### 🔐 **Authentication** (`/api/auth`)
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/auth/register` | Register new user | No |
-| POST | `/auth/login` | Login user | No |
-| GET | `/auth/me` | Get current user info | Yes |
-
-### 📝 **Summaries** (`/api/summaries`)
-| Method | Endpoint | Description | Auth Required | Credits |
-|--------|----------|-------------|---------------|---------|
-| POST | `/summaries` | Create summary (sync) | Yes | -1 |
-| POST | `/summaries/async` | Create summary (async) | Yes | -1 |
-| POST | `/summaries/upload` | Upload file (sync) | Yes | -1 |
-| POST | `/summaries/upload/async` | Upload file (async) | Yes | -1 |
-| GET | `/summaries` | Get user's summaries | Yes | Free |
-| GET | `/summaries/:id` | Get specific summary | Yes | Free |
-| POST | `/summaries/:id/regenerate` | **Regenerate summary (FREE!)** | Yes | **FREE** |
-| PUT | `/summaries/:id` | Update summary | Yes (Editor/Admin) | Free |
-| DELETE | `/summaries/:id` | Delete summary | Yes | Free |
-| GET | `/summaries/job/:jobId` | Check job status | Yes | Free |
-
-### 🛡️ **Admin** (`/api/admin`) - Admin Only
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/admin/users` | Get all users |
-| GET | `/admin/users/:id` | Get specific user |
-| PUT | `/admin/users/:id/recharge` | Add credits to user |
-| PUT | `/admin/users/:id/role` | Update user role |
-| DELETE | `/admin/users/:id` | Delete user |
-| GET | `/admin/summaries` | Get all summaries |
-| PUT | `/admin/summaries/:id` | Update any summary |
-| DELETE | `/admin/summaries/:id` | Delete any summary |
-
-### 👁️ **Reviews** (`/api/reviews`) - Reviewer/Admin Only
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/reviews/pending` | Get summaries pending review |
-| POST | `/reviews/:id/submit` | Submit review (approve/reject/revision) |
-| GET | `/reviews/:id/history` | Get review history for summary |
-| GET | `/reviews/stats` | Get reviewer statistics |
-| POST | `/reviews/bulk-update` | Bulk update review status (admin) |
-
-### 🧪 **Test Routes** (`/api/test`)
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---------------|
-| GET | `/test/user` | Test user auth | user+ |
-| GET | `/test/admin` | Test admin auth | admin |
-| GET | `/test/editor` | Test editor auth | admin, editor |
-| GET | `/test/reviewer` | Test reviewer auth | admin, editor, reviewer |
-
-## 📊 **Features Demonstration & Screenshots**
-
-### 1️⃣ **User Registration & Login**
-```
-1. Visit http://localhost:5173/register
-2. Create account (gets 5 free credits)
-3. Login at http://localhost:5173/login
-4. See role badge in top-right corner
-5. View credits in dashboard
-```
-
-### 2️⃣ **Create Summary from Text**
-```
-1. Go to http://localhost:5173/summarize
-2. Paste content (100-50,000 characters)
-3. Click "Summarize" button
-4. Watch credit deduction (5 → 4)
-5. View summary with compression stats
-6. See word count: Original vs Summarized
-```
-
-### 3️⃣ **Upload File for Summarization**
-```
-1. Go to Summarize page
-2. Click "Upload File" tab
-3. Select .txt or .docx file
-4. File automatically processed
-5. Get AI summary with stats
-6. Download or copy result
-```
-
-### 4️⃣ **Regenerate Summary (FREE!)**
-```
-1. Go to http://localhost:5173/history
-2. Find any existing summary
-3. Click "Regenerate" button
-4. Add custom prompt (optional)
-   Example: "Make it more formal"
-   Example: "Focus on key statistics"
-5. Get new version WITHOUT credit charge
-6. Compare old vs new summary
-```
-
-### 5️⃣ **Admin Dashboard Features**
-```
-1. Login as admin@smartbrief.com
-2. Visit http://localhost:5173/admin
-3. See two tabs: "Users" and "Summaries"
-
-Users Tab:
-  - View all registered users
-  - Click 💰 → Beautiful SweetAlert2 input for credits
-  - Click 👤 → Dropdown menu with role icons:
-    👤 User - Standard access
-    ✏️ Editor - Can edit any summary
-    👁️ Reviewer - Can review summaries
-    🛡️ Admin - Full access
-  - Click 🗑️ → Delete with warning confirmation
-  - See statistics: Total Users, Credits, Admins
-
-Summaries Tab:
-  - View ALL summaries from ALL users
-  - Expand to see full content
-  - Edit any summary
-  - Delete any summary
-```
-
-### 6️⃣ **Reviewer Dashboard (NEW!)**
-```
-1. Login as reviewer@smartbrief.com
-2. Visit http://localhost:5173/reviewer
-3. See three tabs:
-
-Tab 1: Pending Reviews
-  - Shows summaries awaiting review
-  - 4 Action buttons per summary:
-    ✅ Approve → Success toast
-    🔄 Request Revision → Input for feedback
-    ❌ Reject → Input for rejection reason
-    📜 View History → Modal with audit trail
-
-Tab 2: All Summaries
-  - View all summaries in system
-  - Filter and search
-  - Review status badges
-
-Tab 3: My Summaries
-  - Your own created summaries
-  - Standard user features
-
-Statistics Dashboard:
-  - Total Reviews
-  - Approved Count
-  - Rejected Count
-  - Pending Count
-```
-
-### 7️⃣ **Editor Permissions Test**
-```
-1. Login as editor@smartbrief.com
-2. Create a summary
-3. Logout and login as user@smartbrief.com
-4. Create a summary
-5. Logout and login as editor again
-6. Go to History
-7. You can see BOTH summaries
-8. Edit and delete ANY summary
-```
-
-### 8️⃣ **Background Jobs & Bull Board**
-```
-1. Visit http://localhost:5000/admin/queues
-2. See three queues:
-   - Summarization Queue
-   - File Processing Queue
-   - Email Queue
-3. Create async summary
-4. Watch job progress in real-time
-5. See completed/failed jobs
-6. Retry failed jobs if needed
-```
-
-### 9️⃣ **Redis Caching Demo**
-```
-1. Open backend terminal (see logs)
-2. Create a summary with text: "Hello World"
-3. Log shows: "Cache miss - calling AI API"
-4. Regenerate same summary same way
-5. Log shows: "Cache hit - returning cached result"
-6. Delete the summary
-7. Log shows: "Cache invalidated for summary"
-```
-
-### 🔟 **Cron Job - Inactive Users**
-```
-Default: Runs daily at midnight UTC
-
-Manual Test:
-1. cd backend
-2. node -e "require('./services/cronService').deactivateInactiveUsers()"
-3. Check console output
-4. Users inactive 7+ days will be deactivated
-5. Admins are excluded automatically
-```
-
-## 📊 **Project Completion Status**
-
-### ✅ **COMPLETED REQUIREMENTS (9/9)** - 100%
-
-| Requirement | Status | Details |
-|------------|--------|---------|
-| 1. Authentication (JWT) | ✅ DONE | Register, login, protected routes, password hashing |
-| 2. Dynamic Roles & Permissions | ✅ DONE | 4 roles (user, admin, editor, reviewer) with RBAC |
-| 3. Credit System | ✅ DONE | 5 free credits, admin recharge, validation |
-| 4. AI Summarization | ✅ DONE | Groq API, text/file input, regeneration |
-| 5. Redux State Management | ✅ DONE | Redux Toolkit with authSlice & summarySlice |
-| 6. Summary Management | ✅ DONE | View, edit, delete, history, role-based access |
-| 7. Caching (Redis) | ✅ DONE | Redis caching with TTL and invalidation |
-| 8. Background Worker & Queues | ✅ DONE | Bull queues, Bull Board dashboard, async jobs |
-| 9. Cron Jobs | ✅ DONE | Daily inactive user deactivation |
-
-### 🎁 **BONUS FEATURES ADDED**
-- ✅ **Review System** - Complete reviewer workflow with approval/rejection
-- ✅ **SweetAlert2 Integration** - Beautiful confirmation dialogs
-- ✅ **Enhanced Admin Dashboard** - Modern UI with role dropdowns
-- ✅ **Reviewer Dashboard** - Dedicated review interface
-- ✅ **Review History Tracking** - Complete audit trail
-
----
-
-## ⚠️ **Remaining Work**
-
-### ❌ **Deployment** (Not Completed)
-- [ ] Backend hosting (Render/Railway/VPS)
-- [ ] Frontend hosting (Vercel/Netlify)
-- [ ] Environment variable configuration for production
-- [ ] Production build optimization
-- [ ] Domain configuration
-- [ ] SSL certificates
-
-### 🔮 **Optional Future Enhancements**
-- [ ] Email verification on registration
-- [ ] Email notifications via email queue worker
-- [ ] Websockets for real-time job updates
-- [ ] Payment integration (Stripe/PayPal) for credit purchases
-- [ ] Advanced analytics dashboard
-- [ ] API rate limiting
-- [ ] Comprehensive unit & integration tests
-- [ ] API documentation (Swagger/Postman)
-- [ ] Mobile app (React Native)
-
-## 🐛 **Known Issues & Limitations**
-
-### Current Issues
-1. **Bull Board Access:** 
-   - Currently accessible at `/admin/queues` without authentication
-   - **Fix:** Add admin authentication middleware in production
-   - **Workaround:** Use firewall rules or VPN in production
-
-2. **File Upload Size:** 
-   - Limited to 5MB per file
+### File Upload Limits
+- Max file size: 5MB per file
    - **Fix:** Modify `config/fileUpload.js` → `limits: { fileSize: 10 * 1024 * 1024 }`
 
 3. **Redis Optional:** 
@@ -786,7 +297,7 @@ REDIS_PORT=6379
 
 ### Frontend (.env)
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=https://aismartbrief.vercel.app/api
 ```
 
 ## 🧪 Testing

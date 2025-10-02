@@ -61,7 +61,7 @@ const AdminDashboardPage = () => {
       setError(null);
       
       const token = localStorage.getItem('smartbrief_token');
-      const response = await fetch('http://localhost:5000/api/admin/users', {
+      const response = await fetch('https://aismartbrief.vercel.app/api/admin/users', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -89,7 +89,7 @@ const AdminDashboardPage = () => {
       setSummariesError(null);
       
       const token = localStorage.getItem('smartbrief_token');
-      const response = await fetch('http://localhost:5000/api/admin/summaries?limit=50', {
+      const response = await fetch('https://aismartbrief.vercel.app/api/admin/summaries?limit=50', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -141,7 +141,7 @@ const AdminDashboardPage = () => {
       setActionLoading(userId);
       const token = localStorage.getItem('smartbrief_token');
       
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/recharge`, {
+      const response = await fetch(`https://aismartbrief.vercel.app/api/admin/users/${userId}/recharge`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -211,7 +211,7 @@ const AdminDashboardPage = () => {
       setActionLoading(userId);
       const token = localStorage.getItem('smartbrief_token');
       
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
+      const response = await fetch(`https://aismartbrief.vercel.app/api/admin/users/${userId}/role`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -271,7 +271,7 @@ const AdminDashboardPage = () => {
       setActionLoading(userId);
       const token = localStorage.getItem('smartbrief_token');
       
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+      const response = await fetch(`https://aismartbrief.vercel.app/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -319,7 +319,7 @@ const AdminDashboardPage = () => {
       setActionLoading(summaryId);
       const token = localStorage.getItem('smartbrief_token');
       
-      const response = await fetch(`http://localhost:5000/api/admin/summaries/${summaryId}`, {
+      const response = await fetch(`https://aismartbrief.vercel.app/api/admin/summaries/${summaryId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -381,7 +381,7 @@ const AdminDashboardPage = () => {
       setActionLoading(summaryId);
       const token = localStorage.getItem('smartbrief_token');
       
-      const response = await fetch(`http://localhost:5000/api/admin/summaries/${summaryId}`, {
+      const response = await fetch(`https://aismartbrief.vercel.app/api/admin/summaries/${summaryId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

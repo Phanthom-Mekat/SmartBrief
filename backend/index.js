@@ -4,9 +4,6 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-const { initializeRedis, closeRedis } = require('./config/redisClient');
-const { serverAdapter } = require('./config/queue');
-const { startCronJobs, stopCronJobs } = require('./services/cronService');
 const authRoutes = require('./routes/auth');
 const testRoutes = require('./routes/testRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -15,21 +12,58 @@ const summaryRoutes = require('./routes/summaryRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json({ limit: '10mb' })); // Increased limit for large content
 app.use(cors({
-  origin: ['http://localhost:5173'], 
+  origin: ['http://localhost:5173', 'https://aismartbrief.vercel.app'], 
   credentials: true,
 })); 
 app.use(cookieParser());
+
+// MongoDB connection with caching for serverless
+let cachedDb = null;
+
+const connectDB = async () => {
+  if (cachedDb && mongoose.connection.readyState === 1) {
+    console.log('Using cached MongoDB connection');
+    return cachedDb;
+  }
+
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    
+    cachedDb = conn;
+    console.log('MongoDB connected successfully');
+    return conn;
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+};
+
+// Middleware to ensure DB connection before each request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Database connection failed',
+      message: error.message 
+    });
+  }
+});
 
 // Routes
 app.get('/', (req, res) => {
   res.json({
     message: 'SmartBrief API Server is running',
     version: '1.0.0',
+    deployment: 'Vercel Serverless',
     endpoints: {
       auth: '/api/auth',
       admin: '/api/admin',
@@ -48,65 +82,24 @@ app.use('/api/summaries', summaryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/test', testRoutes);
 
-// Bull Board - Queue monitoring dashboard (admin only in production)
-app.use('/admin/queues', serverAdapter.getRouter());
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
 
-// Initialize connections
-const startServer = async () => {
-  try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB connected successfully');
-    
-    // Initialize Redis (optional - app will work without it)
-    await initializeRedis();
-    
-    // Start cron jobs
-    startCronJobs();
-    
-    // Start server
-    const server = app.listen(PORT, () => {
-      console.log(`SmartBrief server running on port ${PORT}`);
-    });
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, async () => {
+    await connectDB();
+    console.log(`SmartBrief server running on port ${PORT}`);
+  });
+}
 
-    // Graceful shutdown
-    const gracefulShutdown = async (signal) => {
-      console.log(`\n${signal} received. Starting graceful shutdown...`);
-      
-      server.close(async () => {
-        console.log('HTTP server closed');
-        
-        // Stop cron jobs
-        stopCronJobs();
-        
-        // Close Redis connection
-        await closeRedis();
-        
-        // Close MongoDB connection
-        await mongoose.connection.close();
-        console.log('MongoDB connection closed');
-        
-        console.log('Graceful shutdown complete');
-        process.exit(0);
-      });
-      
-      // Force close after 10 seconds
-      setTimeout(() => {
-        console.error('Forced shutdown after timeout');
-        process.exit(1);
-      }, 10000);
-    };
-
-    // Handle shutdown signals
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-  } catch (err) {
-    console.error('Server initialization error:', err);
-    process.exit(1);
-  }
-};
-
-// Start the server
-startServer();
+// Export for Vercel serverless
+module.exports = app;
 

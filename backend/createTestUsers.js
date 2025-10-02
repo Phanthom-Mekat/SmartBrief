@@ -106,7 +106,7 @@ const createTestUsers = async () => {
 
     console.log('Step 2: Test ADMIN panel');
     console.log('  → Visit http://localhost:5173/admin (if route exists)');
-    console.log('  → Or test API: http://localhost:5000/api/admin/users');
+    console.log('  → Or test API: https://aismartbrief.vercel.app/api/admin/users');
     console.log('  → Admin can see all users and manage credits\n');
 
     console.log('Step 3: Login as EDITOR');
@@ -128,18 +128,18 @@ const createTestUsers = async () => {
     console.log('═══════════════════════════════════════════\n');
     
     console.log('Admin Only:');
-    console.log('  GET  http://localhost:5000/api/test/admin');
-    console.log('  GET  http://localhost:5000/api/admin/users\n');
+    console.log('  GET  https://aismartbrief.vercel.app/api/test/admin');
+    console.log('  GET  https://aismartbrief.vercel.app/api/admin/users\n');
 
     console.log('Admin OR Editor:');
-    console.log('  GET  http://localhost:5000/api/test/editor\n');
+    console.log('  GET  https://aismartbrief.vercel.app/api/test/editor\n');
 
     console.log('Admin OR Editor OR Reviewer:');
-    console.log('  GET  http://localhost:5000/api/test/reviewer\n');
+    console.log('  GET  https://aismartbrief.vercel.app/api/test/reviewer\n');
 
     console.log('Any Authenticated User:');
-    console.log('  GET  http://localhost:5000/api/test/user');
-    console.log('  GET  http://localhost:5000/api/summaries\n');
+    console.log('  GET  https://aismartbrief.vercel.app/api/test/user');
+    console.log('  GET  https://aismartbrief.vercel.app/api/summaries\n');
 
   } catch (error) {
     console.error('❌ Error creating test users:', error);

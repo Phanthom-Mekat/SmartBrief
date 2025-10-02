@@ -571,6 +571,17 @@ const regenerateSummary = async (req, res) => {
  */
 const createSummaryAsync = async (req, res) => {
   try {
+    const { areQueuesAvailable } = require('../services/queueService');
+    
+    // Check if queues are available
+    if (!areQueuesAvailable()) {
+      return res.status(503).json({ 
+        success: false,
+        error: 'Async operations are not available in serverless mode',
+        message: 'Please use the synchronous endpoint: POST /api/summaries'
+      });
+    }
+
     const { text } = req.body;
     const userId = req.user.id;
 
@@ -614,7 +625,7 @@ const createSummaryAsync = async (req, res) => {
 
   } catch (error) {
     console.error('Create summary async error:', error);
-    res.status(500).json({ error: 'Failed to queue summarization job' });
+    res.status(500).json({ error: error.message || 'Failed to queue summarization job' });
   }
 };
 
@@ -625,6 +636,17 @@ const createSummaryAsync = async (req, res) => {
  */
 const createSummaryFromFileAsync = async (req, res) => {
   try {
+    const { areQueuesAvailable } = require('../services/queueService');
+    
+    // Check if queues are available
+    if (!areQueuesAvailable()) {
+      return res.status(503).json({ 
+        success: false,
+        error: 'Async operations are not available in serverless mode',
+        message: 'Please use the synchronous endpoint: POST /api/summaries/upload'
+      });
+    }
+
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
@@ -647,7 +669,7 @@ const createSummaryFromFileAsync = async (req, res) => {
 
   } catch (error) {
     console.error('Create summary from file async error:', error);
-    res.status(500).json({ error: 'Failed to queue file processing job' });
+    res.status(500).json({ error: error.message || 'Failed to queue file processing job' });
   }
 };
 
@@ -658,6 +680,17 @@ const createSummaryFromFileAsync = async (req, res) => {
  */
 const getJobStatus = async (req, res) => {
   try {
+    const { areQueuesAvailable } = require('../services/queueService');
+    
+    // Check if queues are available
+    if (!areQueuesAvailable()) {
+      return res.status(503).json({ 
+        success: false,
+        error: 'Job status checking is not available in serverless mode',
+        message: 'Async operations are disabled'
+      });
+    }
+
     const { jobId } = req.params;
     const { queue = 'file-processing' } = req.query; // Default to file-processing
 
@@ -695,7 +728,7 @@ const getJobStatus = async (req, res) => {
 
   } catch (error) {
     console.error('Get job status error:', error);
-    res.status(500).json({ error: 'Failed to get job status' });
+    res.status(500).json({ error: error.message || 'Failed to get job status' });
   }
 };
 

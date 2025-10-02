@@ -1,10 +1,15 @@
 const multer = require('multer');
 const path = require('path');
+const os = require('os');
 
-// Configure storage
+// Configure storage - use /tmp in serverless, uploads/ locally
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Temporary storage
+    // Use /tmp for serverless (Vercel, Lambda), uploads/ for local
+    const uploadDir = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME 
+      ? os.tmpdir() 
+      : 'uploads/';
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

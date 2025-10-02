@@ -2,7 +2,15 @@ const { summarizationQueue, fileProcessingQueue, emailQueue } = require('../conf
 
 /**
  * Queue Service - Helper functions to add jobs to queues
+ * Note: Queues are disabled in serverless environments
  */
+
+/**
+ * Check if queues are available
+ */
+const areQueuesAvailable = () => {
+  return summarizationQueue !== null && fileProcessingQueue !== null && emailQueue !== null;
+};
 
 /**
  * Add a summarization job to the queue
@@ -13,6 +21,10 @@ const { summarizationQueue, fileProcessingQueue, emailQueue } = require('../conf
  * @returns {Promise<Object>} - Job object
  */
 const addSummarizationJob = async (userId, text, options = {}) => {
+  if (!areQueuesAvailable()) {
+    throw new Error('Queue service is not available. Async operations are disabled in serverless mode. Use synchronous endpoints instead.');
+  }
+
   try {
     const job = await summarizationQueue.add(
       {
@@ -49,6 +61,10 @@ const addSummarizationJob = async (userId, text, options = {}) => {
  * @returns {Promise<Object>} - Job object
  */
 const addFileProcessingJob = async (userId, filePath, fileName, options = {}) => {
+  if (!areQueuesAvailable()) {
+    throw new Error('Queue service is not available. Async operations are disabled in serverless mode. Use synchronous endpoints instead.');
+  }
+
   try {
     const job = await fileProcessingQueue.add(
       {
@@ -87,6 +103,10 @@ const addFileProcessingJob = async (userId, filePath, fileName, options = {}) =>
  * @returns {Promise<Object>} - Job object
  */
 const addEmailJob = async (to, subject, body, type = 'notification') => {
+  if (!areQueuesAvailable()) {
+    throw new Error('Queue service is not available. Async operations are disabled in serverless mode.');
+  }
+
   try {
     const job = await emailQueue.add(
       {
@@ -121,6 +141,10 @@ const addEmailJob = async (to, subject, body, type = 'notification') => {
  * @returns {Promise<Object>} - Job status
  */
 const getJobStatus = async (queueName, jobId) => {
+  if (!areQueuesAvailable()) {
+    throw new Error('Queue service is not available. Async operations are disabled in serverless mode.');
+  }
+
   try {
     let queue;
     switch (queueName) {
@@ -169,6 +193,10 @@ const getJobStatus = async (queueName, jobId) => {
  * @returns {Promise<Object>} - Queue stats
  */
 const getQueueStats = async (queueName) => {
+  if (!areQueuesAvailable()) {
+    throw new Error('Queue service is not available. Async operations are disabled in serverless mode.');
+  }
+
   try {
     let queue;
     switch (queueName) {
@@ -209,6 +237,7 @@ const getQueueStats = async (queueName) => {
 };
 
 module.exports = {
+  areQueuesAvailable,
   addSummarizationJob,
   addFileProcessingJob,
   addEmailJob,

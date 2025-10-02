@@ -5,9 +5,12 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "start:local": "node server-local.js",
     "dev": "nodemon index.js",
+    "dev:local": "nodemon server-local.js",
     "worker": "node workers/index.js",
     "worker:dev": "nodemon workers/index.js",
+    "diagnose": "node diagnose.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

@@ -58,7 +58,7 @@ const ReviewerDashboardPage = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('smartbrief_token');
-      const response = await fetch('http://localhost:5000/api/reviews/stats', {
+      const response = await fetch('https://aismartbrief.vercel.app/api/reviews/stats', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -81,7 +81,7 @@ const ReviewerDashboardPage = () => {
       setError(null);
       
       const token = localStorage.getItem('smartbrief_token');
-      const response = await fetch(`http://localhost:5000/api/reviews/pending?status=${status}&limit=100`, {
+      const response = await fetch(`https://aismartbrief.vercel.app/api/reviews/pending?status=${status}&limit=100`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -111,7 +111,7 @@ const ReviewerDashboardPage = () => {
       setError(null);
       
       const token = localStorage.getItem('smartbrief_token');
-      const response = await fetch('http://localhost:5000/api/summaries?limit=100', {
+      const response = await fetch('https://aismartbrief.vercel.app/api/summaries?limit=100', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -156,7 +156,7 @@ const ReviewerDashboardPage = () => {
       setActionLoading(summaryId);
       
       const token = localStorage.getItem('smartbrief_token');
-      const response = await fetch(`http://localhost:5000/api/reviews/${summaryId}/submit`, {
+      const response = await fetch(`https://aismartbrief.vercel.app/api/reviews/${summaryId}/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -205,7 +205,7 @@ const ReviewerDashboardPage = () => {
   const fetchReviewHistory = async (summaryId) => {
     try {
       const token = localStorage.getItem('smartbrief_token');
-      const response = await fetch(`http://localhost:5000/api/reviews/${summaryId}/history`, {
+      const response = await fetch(`https://aismartbrief.vercel.app/api/reviews/${summaryId}/history`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

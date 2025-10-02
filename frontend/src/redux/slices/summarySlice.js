@@ -9,30 +9,9 @@ export const createSummary = createAsyncThunk(
   'summary/createSummary',
   async (content, { rejectWithValue }) => {
     try {
-      // ✅ Using ASYNC endpoint - jobs will appear in Bull Board!
-      const jobResponse = await summaryService.createSummaryAsync(content);
-      const { jobId } = jobResponse;
-      
-      // Poll for job completion every 2 seconds
-      const pollInterval = 2000;
-      const maxAttempts = 60; // 2 minutes timeout
-      let attempts = 0;
-      
-      while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
-        const statusResponse = await summaryService.getJobStatus(jobId, 'summarization');
-        
-        if (statusResponse.jobStatus === 'completed') {
-          // Job completed successfully!
-          return statusResponse.summary;
-        } else if (statusResponse.jobStatus === 'failed') {
-          throw new Error(statusResponse.failedReason || 'Summarization failed');
-        }
-        // Still processing... continue polling
-        attempts++;
-      }
-      
-      throw new Error('Summarization timed out. Please try again.');
+      // ✅ Using SYNCHRONOUS endpoint (serverless-compatible)
+      const response = await summaryService.createSummary(content);
+      return response.data.summary;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to create summary');
     }
@@ -76,30 +55,9 @@ export const createSummaryFromFile = createAsyncThunk(
   'summary/createSummaryFromFile',
   async (file, { rejectWithValue }) => {
     try {
-      // ✅ Using ASYNC endpoint - jobs will appear in Bull Board!
-      const jobResponse = await summaryService.createSummaryFromFileAsync(file);
-      const { jobId } = jobResponse;
-      
-      // Poll for job completion every 2 seconds
-      const pollInterval = 2000;
-      const maxAttempts = 60; // 2 minutes timeout
-      let attempts = 0;
-      
-      while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
-        const statusResponse = await summaryService.getJobStatus(jobId, 'file-processing');
-        
-        if (statusResponse.jobStatus === 'completed') {
-          // Job completed successfully!
-          return statusResponse.summary;
-        } else if (statusResponse.jobStatus === 'failed') {
-          throw new Error(statusResponse.failedReason || 'File processing failed');
-        }
-        // Still processing... continue polling
-        attempts++;
-      }
-      
-      throw new Error('File processing timed out. Please try again.');
+      // ✅ Using SYNCHRONOUS endpoint (serverless-compatible)
+      const response = await summaryService.createSummaryFromFile(file);
+      return response.data.summary;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to create summary from file');
     }
@@ -216,12 +174,9 @@ const summarySlice = createSlice({
       })
       .addCase(createSummary.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        // For async endpoints, payload is already the summary object
+        // Synchronous endpoint returns summary object directly
         state.currentSummary = action.payload;
         state.error = null;
-        
-        // Update statistics if provided (async returns summary directly)
-        // Statistics will be fetched separately if needed
       })
       .addCase(createSummary.rejected, (state, action) => {
         state.status = 'failed';
@@ -276,7 +231,7 @@ const summarySlice = createSlice({
       })
       .addCase(createSummaryFromFile.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        // For async endpoints, payload is already the summary object
+        // Synchronous endpoint returns summary object directly
         state.currentSummary = action.payload;
         state.error = null;
       })

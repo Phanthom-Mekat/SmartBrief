@@ -12,6 +12,12 @@ let isConnected = false;
  * Initialize Redis client with configuration
  */
 const initializeRedis = async () => {
+  // Skip Redis initialization in serverless environments
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    console.log('⚠ Serverless environment detected - Redis disabled');
+    return null;
+  }
+
   try {
     // Check if Redis URL is provided
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
@@ -20,10 +26,11 @@ const initializeRedis = async () => {
     redisClient = redis.createClient({
       url: redisUrl,
       socket: {
+        connectTimeout: 5000,
         reconnectStrategy: (retries) => {
-          if (retries > 10) {
+          if (retries > 3) {
             console.error('Redis: Max reconnection attempts reached');
-            return new Error('Redis connection failed after 10 retries');
+            return false; // Stop retrying
           }
           // Exponential backoff: 50ms, 100ms, 200ms, etc.
           return Math.min(retries * 50, 3000);
@@ -56,13 +63,20 @@ const initializeRedis = async () => {
       isConnected = false;
     });
 
-    // Connect to Redis
-    await redisClient.connect();
+    // Connect to Redis with timeout
+    await Promise.race([
+      redisClient.connect(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Redis connection timeout')), 5000)
+      )
+    ]);
 
     return redisClient;
   } catch (error) {
     console.error('Failed to initialize Redis:', error.message);
     console.warn('⚠ Application will continue without caching');
+    isConnected = false;
+    redisClient = null;
     return null;
   }
 };
