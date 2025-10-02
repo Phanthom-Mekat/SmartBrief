@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectUser, decrementCredits } from '../redux/slices/authSlice';
+import { selectUser, updateUserCredits } from '../redux/slices/authSlice';
 import { 
   createSummary, 
   selectCurrentSummary, 
   selectSummaryStatus, 
   selectSummaryError,
   selectIsCreating,
+  selectUpdatedCredits,
   clearCurrentSummary,
   clearErrors
 } from '../redux/slices/summarySlice';
@@ -30,6 +31,7 @@ const SummarizePage = () => {
   const summaryStatus = useSelector(selectSummaryStatus);
   const summaryError = useSelector(selectSummaryError);
   const isCreating = useSelector(selectIsCreating);
+  const updatedCredits = useSelector(selectUpdatedCredits);
 
   // Local state
   const [content, setContent] = useState('');
@@ -49,13 +51,13 @@ const SummarizePage = () => {
     };
   }, [dispatch]);
 
-  // Update credits when summary is successfully created
+  // Update credits from backend response when summary is successfully created
   useEffect(() => {
-    if (summaryStatus === 'succeeded' && currentSummary) {
-      // Decrement credits in auth state
-      dispatch(decrementCredits(1));
+    if (summaryStatus === 'succeeded' && updatedCredits !== null) {
+      // Sync credits from backend response
+      dispatch(updateUserCredits(updatedCredits));
     }
-  }, [summaryStatus, currentSummary, dispatch]);
+  }, [summaryStatus, updatedCredits, dispatch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

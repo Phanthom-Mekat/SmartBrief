@@ -78,6 +78,9 @@ const summarySlice = createSlice({
       wordsReduced: 0,
     },
     
+    // Updated credits from backend (after summary creation)
+    updatedCredits: null,
+    
     // Async operation states
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     fetchStatus: 'idle',
@@ -94,6 +97,7 @@ const summarySlice = createSlice({
       state.currentSummary = null;
       state.status = 'idle';
       state.error = null;
+      state.updatedCredits = null;
     },
     
     // Clear all errors
@@ -146,8 +150,10 @@ const summarySlice = createSlice({
           state.statistics = action.payload.statistics;
         }
         
-        // Note: Credit decrementing is handled in the component
-        // by dispatching decrementCredits action from authSlice
+        // Store the updated credits from backend for the component to use
+        if (action.payload.user && action.payload.user.creditsRemaining !== undefined) {
+          state.updatedCredits = action.payload.user.creditsRemaining;
+        }
       })
       .addCase(createSummary.rejected, (state, action) => {
         state.status = 'failed';
@@ -215,6 +221,7 @@ export const selectFetchError = (state) => state.summary.fetchError;
 export const selectDeleteError = (state) => state.summary.deleteError;
 export const selectPagination = (state) => state.summary.pagination;
 export const selectStatistics = (state) => state.summary.statistics;
+export const selectUpdatedCredits = (state) => state.summary.updatedCredits;
 
 // Combined selectors for convenience
 export const selectIsCreating = (state) => state.summary.status === 'loading';
