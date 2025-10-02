@@ -9,7 +9,10 @@ const {
   getUserSummaries,
   getSummaryById,
   deleteSummary,
-  regenerateSummary
+  regenerateSummary,
+  createSummaryAsync,
+  createSummaryFromFileAsync,
+  getJobStatus
 } = require('../controllers/summaryController');
 
 /**
@@ -63,5 +66,10 @@ router.post('/:id/regenerate', protect, regenerateSummary);
  * @access  Private (user can only delete their own summaries)
  */
 router.delete('/:id', protect, deleteSummary);
+
+// Async routes using Bull queue  
+router.post('/async', protect, checkCredits(1), createSummaryAsync);
+router.post('/upload/async', protect, upload.single('file'), checkCredits(1), createSummaryFromFileAsync);
+router.get('/job/:jobId', protect, getJobStatus);
 
 module.exports = router;

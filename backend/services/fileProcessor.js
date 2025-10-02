@@ -10,9 +10,10 @@ class FileProcessor {
   /**
    * Process uploaded file and extract text content
    * @param {Object} file - Multer file object
+   * @param {boolean} deleteAfter - Whether to delete file after extraction (default: true)
    * @returns {Promise<string>} - Extracted text content
    */
-  static async extractTextFromFile(file) {
+  static async extractTextFromFile(file, deleteAfter = true) {
     if (!file) {
       throw new Error('No file provided');
     }
@@ -31,8 +32,10 @@ class FileProcessor {
           throw new Error(`Unsupported file type: ${ext}`);
       }
     } finally {
-      // Clean up: Delete the temporary file after processing
-      await this.deleteFile(file.path);
+      // Clean up: Delete the temporary file after processing (if requested)
+      if (deleteAfter) {
+        await this.deleteFile(file.path);
+      }
     }
   }
 

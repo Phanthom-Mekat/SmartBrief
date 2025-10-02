@@ -9,8 +9,30 @@ export const createSummary = createAsyncThunk(
   'summary/createSummary',
   async (content, { rejectWithValue }) => {
     try {
-      const response = await summaryService.createSummary(content);
-      return response.data;
+      // ✅ Using ASYNC endpoint - jobs will appear in Bull Board!
+      const jobResponse = await summaryService.createSummaryAsync(content);
+      const { jobId } = jobResponse;
+      
+      // Poll for job completion every 2 seconds
+      const pollInterval = 2000;
+      const maxAttempts = 60; // 2 minutes timeout
+      let attempts = 0;
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        const statusResponse = await summaryService.getJobStatus(jobId, 'summarization');
+        
+        if (statusResponse.jobStatus === 'completed') {
+          // Job completed successfully!
+          return statusResponse.summary;
+        } else if (statusResponse.jobStatus === 'failed') {
+          throw new Error(statusResponse.failedReason || 'Summarization failed');
+        }
+        // Still processing... continue polling
+        attempts++;
+      }
+      
+      throw new Error('Summarization timed out. Please try again.');
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to create summary');
     }
@@ -54,8 +76,30 @@ export const createSummaryFromFile = createAsyncThunk(
   'summary/createSummaryFromFile',
   async (file, { rejectWithValue }) => {
     try {
-      const response = await summaryService.createSummaryFromFile(file);
-      return response.data;
+      // ✅ Using ASYNC endpoint - jobs will appear in Bull Board!
+      const jobResponse = await summaryService.createSummaryFromFileAsync(file);
+      const { jobId } = jobResponse;
+      
+      // Poll for job completion every 2 seconds
+      const pollInterval = 2000;
+      const maxAttempts = 60; // 2 minutes timeout
+      let attempts = 0;
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        const statusResponse = await summaryService.getJobStatus(jobId, 'file-processing');
+        
+        if (statusResponse.jobStatus === 'completed') {
+          // Job completed successfully!
+          return statusResponse.summary;
+        } else if (statusResponse.jobStatus === 'failed') {
+          throw new Error(statusResponse.failedReason || 'File processing failed');
+        }
+        // Still processing... continue polling
+        attempts++;
+      }
+      
+      throw new Error('File processing timed out. Please try again.');
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to create summary from file');
     }
@@ -172,18 +216,12 @@ const summarySlice = createSlice({
       })
       .addCase(createSummary.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.currentSummary = action.payload.summary;
+        // For async endpoints, payload is already the summary object
+        state.currentSummary = action.payload;
         state.error = null;
         
-        // Update statistics if provided
-        if (action.payload.statistics) {
-          state.statistics = action.payload.statistics;
-        }
-        
-        // Store the updated credits from backend for the component to use
-        if (action.payload.user && action.payload.user.creditsRemaining !== undefined) {
-          state.updatedCredits = action.payload.user.creditsRemaining;
-        }
+        // Update statistics if provided (async returns summary directly)
+        // Statistics will be fetched separately if needed
       })
       .addCase(createSummary.rejected, (state, action) => {
         state.status = 'failed';
@@ -238,16 +276,9 @@ const summarySlice = createSlice({
       })
       .addCase(createSummaryFromFile.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.currentSummary = action.payload.summary;
+        // For async endpoints, payload is already the summary object
+        state.currentSummary = action.payload;
         state.error = null;
-        
-        if (action.payload.statistics) {
-          state.statistics = action.payload.statistics;
-        }
-        
-        if (action.payload.user && action.payload.user.creditsRemaining !== undefined) {
-          state.updatedCredits = action.payload.user.creditsRemaining;
-        }
       })
       .addCase(createSummaryFromFile.rejected, (state, action) => {
         state.status = 'failed';

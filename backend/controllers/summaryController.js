@@ -3,6 +3,7 @@ const User = require('../models/User');
 const { getSummary, validateContent } = require('../services/aiService');
 const { setCache, isRedisConnected } = require('../config/redisClient');
 const FileProcessor = require('../services/fileProcessor');
+const { addSummarizationJob, addFileProcessingJob, getJobStatus: checkJobStatus } = require('../services/queueService');
 
 /**
  * @desc    Create a new summary
@@ -563,11 +564,149 @@ const regenerateSummary = async (req, res) => {
   }
 };
 
+/**
+ * @route   POST /api/summaries/async
+ * @desc    Create summary asynchronously using queue (returns job ID immediately)
+ * @access  Private (requires authentication and 1 credit)
+ */
+const createSummaryAsync = async (req, res) => {
+  try {
+    const { text } = req.body;
+    const userId = req.user.id;
+
+    // Validate input
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Text content is required' });
+    }
+
+    // Validate content
+    const validation = validateContent(text);
+    if (!validation.isValid) {
+      return res.status(400).json({ error: validation.errors.join(', ') });
+    }
+
+    // Get user and check credits
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.credits <= 0) {
+      return res.status(403).json({ error: 'Insufficient credits. Please contact admin to recharge.' });
+    }
+
+    console.log(`Adding summarization job to queue for user ${user.name} (${user.email})`);
+
+    // Add job to queue
+    const job = await addSummarizationJob(userId, text, {});
+
+    // Deduct credit immediately (or you can do it in the worker)
+    user.credits -= 1;
+    user.lastActive = new Date();
+    await user.save();
+
+    res.status(202).json({
+      message: 'Summarization job queued successfully',
+      jobId: job.id,
+      creditsRemaining: user.credits,
+      statusEndpoint: `/api/summaries/job/${job.id}`
+    });
+
+  } catch (error) {
+    console.error('Create summary async error:', error);
+    res.status(500).json({ error: 'Failed to queue summarization job' });
+  }
+};
+
+/**
+ * @route   POST /api/summaries/file/async
+ * @desc    Create summary from file asynchronously using queue (returns job ID immediately)
+ * @access  Private (requires authentication and 1 credit)
+ */
+const createSummaryFromFileAsync = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const userId = req.user.id;
+    const filePath = req.file.path;
+    const fileName = req.file.originalname;
+
+    console.log(`Adding file processing job to queue for user ${req.user.name}: ${fileName}`);
+
+    // Add job to queue
+    const job = await addFileProcessingJob(userId, filePath, fileName, {});
+
+    res.status(202).json({
+      message: 'File processing job queued successfully',
+      jobId: job.id,
+      fileName: fileName,
+      statusEndpoint: `/api/summaries/job/${job.id}`
+    });
+
+  } catch (error) {
+    console.error('Create summary from file async error:', error);
+    res.status(500).json({ error: 'Failed to queue file processing job' });
+  }
+};
+
+/**
+ * @route   GET /api/summaries/job/:jobId
+ * @desc    Get job status and result
+ * @access  Private (requires authentication)
+ */
+const getJobStatus = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { queue = 'file-processing' } = req.query; // Default to file-processing
+
+    const status = await checkJobStatus(queue, jobId);
+
+    if (status.status === 'not_found') {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // If job is completed, fetch the summary from database
+    if (status.status === 'completed' && status.result && status.result.summaryId) {
+      const summary = await Summary.findById(status.result.summaryId)
+        .populate('user', 'name email')
+        .lean();
+
+      return res.json({
+        jobStatus: status.status,
+        progress: status.progress,
+        summary: summary,
+        processingTime: status.result.processingTime,
+        compressionRatio: status.result.compressionRatio,
+        creditsRemaining: status.result.creditsRemaining
+      });
+    }
+
+    // Job still processing or failed
+    res.json({
+      jobStatus: status.status,
+      progress: status.progress,
+      failedReason: status.failedReason,
+      timestamp: status.timestamp,
+      processedOn: status.processedOn,
+      finishedOn: status.finishedOn
+    });
+
+  } catch (error) {
+    console.error('Get job status error:', error);
+    res.status(500).json({ error: 'Failed to get job status' });
+  }
+};
+
 module.exports = {
   createSummary,
   createSummaryFromFile,
   getUserSummaries,
   getSummaryById,
   deleteSummary,
-  regenerateSummary
+  regenerateSummary,
+  createSummaryAsync,
+  createSummaryFromFileAsync,
+  getJobStatus
 };

@@ -105,6 +105,63 @@ const summaryService = {
       throw new Error(message);
     }
   },
+
+  /**
+   * ========== ASYNC QUEUE-BASED METHODS (Visible in Bull Board) ==========
+   */
+
+  /**
+   * Create summary asynchronously using queue (returns job ID)
+   * @param {string} content - Text content to summarize
+   * @returns {Promise<Object>} Job ID and status endpoint
+   */
+  async createSummaryAsync(content) {
+    try {
+      const response = await api.post('/summaries/async', { text: content });
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to queue summary';
+      throw new Error(message);
+    }
+  },
+
+  /**
+   * Create summary from file asynchronously using queue (returns job ID)
+   * @param {File} file - File object (.txt or .docx)
+   * @returns {Promise<Object>} Job ID and status endpoint
+   */
+  async createSummaryFromFileAsync(file) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post('/summaries/upload/async', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to queue file processing';
+      throw new Error(message);
+    }
+  },
+
+  /**
+   * Get job status and result
+   * @param {string} jobId - Job ID returned from async endpoint
+   * @param {string} queue - Queue name (summarization, file-processing, email)
+   * @returns {Promise<Object>} Job status and result (if completed)
+   */
+  async getJobStatus(jobId, queue = 'file-processing') {
+    try {
+      const response = await api.get(`/summaries/job/${jobId}?queue=${queue}`);
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to get job status';
+      throw new Error(message);
+    }
+  },
 };
 
 export default summaryService;

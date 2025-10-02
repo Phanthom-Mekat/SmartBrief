@@ -5,6 +5,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const { initializeRedis, closeRedis } = require('./config/redisClient');
+const { serverAdapter } = require('./config/queue');
 const authRoutes = require('./routes/auth');
 const testRoutes = require('./routes/testRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -41,6 +42,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/summaries', summaryRoutes);
 app.use('/api/test', testRoutes);
+
+// Bull Board - Queue monitoring dashboard (admin only in production)
+app.use('/admin/queues', serverAdapter.getRouter());
 
 // Initialize connections
 const startServer = async () => {
