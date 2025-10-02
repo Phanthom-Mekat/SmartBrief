@@ -51,3 +51,36 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+// Get Current User (for refreshing user data)
+exports.getCurrentUser = async (req, res) => {
+  try {
+    // req.user is already set by the protect middleware
+    const user = await User.findById(req.user._id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        credits: user.credits,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error', 
+      error: err.message 
+    });
+  }
+};

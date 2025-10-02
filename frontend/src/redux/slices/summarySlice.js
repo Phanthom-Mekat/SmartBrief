@@ -48,6 +48,21 @@ export const deleteSummary = createAsyncThunk(
 );
 
 /**
+ * Async Thunk: Create summary from uploaded file
+ */
+export const createSummaryFromFile = createAsyncThunk(
+  'summary/createSummaryFromFile',
+  async (file, { rejectWithValue }) => {
+    try {
+      const response = await summaryService.createSummaryFromFile(file);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to create summary from file');
+    }
+  }
+);
+
+/**
  * Summary Slice
  * Manages all state related to content summaries
  */
@@ -199,6 +214,30 @@ const summarySlice = createSlice({
       .addCase(deleteSummary.rejected, (state, action) => {
         state.deleteStatus = 'failed';
         state.deleteError = action.payload || 'Failed to delete summary';
+      })
+
+      // Create Summary from File (same as create summary)
+      .addCase(createSummaryFromFile.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(createSummaryFromFile.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.currentSummary = action.payload.summary;
+        state.error = null;
+        
+        if (action.payload.statistics) {
+          state.statistics = action.payload.statistics;
+        }
+        
+        if (action.payload.user && action.payload.user.creditsRemaining !== undefined) {
+          state.updatedCredits = action.payload.user.creditsRemaining;
+        }
+      })
+      .addCase(createSummaryFromFile.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Failed to create summary from file';
+        state.currentSummary = null;
       });
   },
 });

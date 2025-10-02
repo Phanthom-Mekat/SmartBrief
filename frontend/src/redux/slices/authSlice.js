@@ -1,4 +1,20 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import authService from '../../services/authService';
+
+/**
+ * Async Thunk: Refresh user data from backend
+ */
+export const refreshUser = createAsyncThunk(
+  'auth/refreshUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const userData = await authService.getCurrentUser();
+      return userData;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to refresh user data');
+    }
+  }
+);
 
 // Check if user token exists in localStorage on app initialization
 const getInitialAuthState = () => {
@@ -12,6 +28,7 @@ const getInitialAuthState = () => {
         token,
         isAuthenticated: true,
         loading: false,
+        refreshLoading: false,
         error: null,
       };
     }
@@ -27,6 +44,7 @@ const getInitialAuthState = () => {
     token: null,
     isAuthenticated: false,
     loading: false,
+    refreshLoading: false,
     error: null,
   };
 };
@@ -105,6 +123,23 @@ const authSlice = createSlice({
       state.error = null;
     },
   },
+  extraReducers: (builder) => {
+    builder
+      // Refresh User
+      .addCase(refreshUser.pending, (state) => {
+        state.refreshLoading = true;
+      })
+      .addCase(refreshUser.fulfilled, (state, action) => {
+        state.refreshLoading = false;
+        state.user = action.payload;
+        // Data is already saved to localStorage by authService
+      })
+      .addCase(refreshUser.rejected, (state, action) => {
+        state.refreshLoading = false;
+        // Silently fail - don't show error for background refresh
+        console.error('Failed to refresh user data:', action.payload);
+      });
+  },
 });
 
 export const {
@@ -124,6 +159,7 @@ export const selectUser = (state) => state.auth.user;
 export const selectToken = (state) => state.auth.token;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
 export const selectAuthLoading = (state) => state.auth.loading;
+export const selectRefreshLoading = (state) => state.auth.refreshLoading;
 export const selectAuthError = (state) => state.auth.error;
 
 export default authSlice.reducer;

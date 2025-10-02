@@ -65,6 +65,28 @@ const summaryService = {
       throw new Error(message);
     }
   },
+
+  /**
+   * Create summary from uploaded file
+   * @param {File} file - File object (.txt or .docx)
+   * @returns {Promise<Object>} Summary data
+   */
+  async createSummaryFromFile(file) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post('/summaries/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to upload and process file';
+      throw new Error(message);
+    }
+  },
 };
 
 export default summaryService;

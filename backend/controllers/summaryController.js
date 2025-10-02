@@ -2,6 +2,7 @@ const Summary = require('../models/Summary');
 const User = require('../models/User');
 const { getSummary, validateContent } = require('../services/aiService');
 const { setCache, isRedisConnected } = require('../config/redisClient');
+const FileProcessor = require('../services/fileProcessor');
 
 /**
  * @desc    Create a new summary
@@ -307,8 +308,161 @@ const deleteSummary = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Create summary from uploaded file
+ * @route   POST /api/summaries/upload
+ * @access  Private (requires authentication and 1 credit)
+ */
+const createSummaryFromFile = async (req, res) => {
+  const startTime = Date.now();
+  
+  try {
+    const userId = req.user._id;
+    const file = req.file;
+
+    // Validate file exists
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded. Please upload a .txt or .docx file.'
+      });
+    }
+
+    console.log(`Processing file upload: ${file.originalname} (${file.size} bytes)`);
+
+    // Extract text content from file
+    let content;
+    try {
+      content = await FileProcessor.extractTextFromFile(file);
+    } catch (extractError) {
+      console.error('File extraction error:', extractError.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Failed to extract text from file',
+        error: extractError.message
+      });
+    }
+
+    // Validate extracted content
+    const contentValidation = FileProcessor.validateContent(content);
+    if (!contentValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file content',
+        error: contentValidation.error
+      });
+    }
+
+    // Validate content for AI processing
+    const aiValidation = validateContent(content);
+    if (!aiValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid content for summarization',
+        errors: aiValidation.errors
+      });
+    }
+
+    // Check user credits
+    const user = await User.findById(userId);
+    if (!user || user.credits < 1) {
+      return res.status(402).json({
+        success: false,
+        message: 'Insufficient credits to create summary'
+      });
+    }
+
+    console.log(`File processed successfully. Starting summarization for user ${user.name}`);
+
+    // Generate summary using AI service
+    let summarizedContent;
+    let summaryStats = {};
+    try {
+      const result = await getSummary(content);
+      
+      if (typeof result === 'string') {
+        summarizedContent = result;
+      } else if (result && typeof result === 'object') {
+        summarizedContent = result.summary;
+        summaryStats = {
+          originalWordCount: result.originalWordCount,
+          summaryWordCount: result.summaryWordCount,
+          compressionRatio: result.compressionRatio
+        };
+      }
+    } catch (aiError) {
+      console.error('AI summarization failed:', aiError.message);
+      return res.status(503).json({
+        success: false,
+        message: 'AI summarization service is currently unavailable',
+        error: aiError.message
+      });
+    }
+
+    // Create summary document
+    const summary = new Summary({
+      user: userId,
+      originalContent: content,
+      summarizedContent,
+      processingTime: Date.now() - startTime,
+      uploadedFileName: file.originalname,
+      ...summaryStats
+    });
+
+    await summary.save();
+
+    // Deduct credit
+    user.credits -= 1;
+    await user.save();
+
+    console.log(`Summary created from file for user ${user.name}. Credits remaining: ${user.credits}`);
+
+    // Prepare response
+    const summaryData = {
+      id: summary._id,
+      originalWordCount: summary.originalWordCount,
+      summaryWordCount: summary.summaryWordCount,
+      compressionRatio: summary.compressionRatio,
+      summarizedContent: summary.summarizedContent,
+      processingTime: summary.processingTime,
+      uploadedFileName: summary.uploadedFileName,
+      createdAt: summary.createdAt,
+      aiModel: summary.aiModel,
+      status: summary.status
+    };
+
+    // Cache if Redis is available
+    if (isRedisConnected() && req.cacheKey) {
+      await setCache(req.cacheKey, summaryData, 86400);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Summary created successfully from uploaded file',
+      fromCache: false,
+      data: {
+        summary: summaryData,
+        user: {
+          creditsRemaining: user.credits,
+          creditsUsed: 1
+        },
+        statistics: summary.statistics
+      }
+    });
+
+  } catch (error) {
+    console.error('Create summary from file error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while processing file',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createSummary,
+  createSummaryFromFile,
   getUserSummaries,
   getSummaryById,
   deleteSummary

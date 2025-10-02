@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectIsAuthenticated, selectUser, logoutUser } from '../redux/slices/authSlice';
+import { selectIsAuthenticated, selectUser, logoutUser, refreshUser, selectRefreshLoading } from '../redux/slices/authSlice';
 import authService from '../services/authService';
 import { Button } from './ui/button';
-import { Sparkles, LogOut, User, Coins } from 'lucide-react';
+import { Sparkles, LogOut, User, Coins, RefreshCw } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 /**
@@ -15,6 +15,11 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
+  const refreshLoading = useSelector(selectRefreshLoading);
+
+  const handleRefresh = () => {
+    dispatch(refreshUser());
+  };
 
   const handleLogout = async () => {
     try {
@@ -67,10 +72,22 @@ const Navbar = () => {
                 </Button>
               </div>
 
-              {/* Credits Display */}
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
-                <Coins className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">{user?.credits || 0} Credits</span>
+              {/* Credits Display with Refresh */}
+              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
+                  <Coins className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">{user?.credits || 0} Credits</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={refreshLoading}
+                  title="Refresh credits from server"
+                  className="h-8 w-8 p-0"
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshLoading ? 'animate-spin' : ''}`} />
+                </Button>
               </div>
 
               {/* User Info */}

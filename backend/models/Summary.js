@@ -39,6 +39,14 @@ const summarySchema = new mongoose.Schema({
   aiModel: {
     type: String,
     default: 'gemini-1.5-flash'
+  },
+  uploadedFileName: {
+    type: String,
+    default: null
+  },
+  isFallback: {
+    type: Boolean,
+    default: false
   }
 }, { 
   timestamps: true 

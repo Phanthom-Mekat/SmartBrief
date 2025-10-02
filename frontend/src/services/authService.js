@@ -100,13 +100,18 @@ const authService = {
   },
 
   /**
-   * Get current user profile
+   * Get current user profile (fetch fresh data from backend)
    * @returns {Promise<Object>} User data
    */
   async getCurrentUser() {
     try {
-      const response = await api.get('/test/user');
-      return response.data.user;
+      const response = await api.get('/auth/me');
+      const userData = response.data.data;
+      
+      // Update localStorage with fresh data
+      localStorage.setItem('smartbrief_user', JSON.stringify(userData));
+      
+      return userData;
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to get user profile';
       throw new Error(message);

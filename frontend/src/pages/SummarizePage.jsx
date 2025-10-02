@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectUser, updateUserCredits } from '../redux/slices/authSlice';
 import { 
-  createSummary, 
+  createSummary,
+  createSummaryFromFile,
   selectCurrentSummary, 
   selectSummaryStatus, 
   selectSummaryError,
@@ -14,9 +15,10 @@ import {
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Alert, AlertDescription } from '../components/ui/alert';
-import { Loader2, Sparkles, Copy, CheckCircle, FileText, Zap, AlertCircle } from 'lucide-react';
+import { Loader2, Sparkles, Copy, CheckCircle, FileText, Zap, AlertCircle, Upload, X } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
 /**
  * Summarize Page Component
@@ -36,6 +38,8 @@ const SummarizePage = () => {
   // Local state
   const [content, setContent] = useState('');
   const [copied, setCopied] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
 
   // Character count and validation
   const charCount = content.length;
@@ -106,16 +110,30 @@ const SummarizePage = () => {
 
       {/* Main Content */}
       <div className="grid gap-6">
-        {/* Input Section */}
+        {/* Input Section with Tabs */}
         <Card>
           <CardHeader>
-            <CardTitle>Your Content</CardTitle>
+            <CardTitle>Create Summary</CardTitle>
             <CardDescription>
-              Paste or type the content you want to summarize ({minChars}-{maxChars.toLocaleString()} characters)
+              Choose to paste text or upload a file (.txt or .docx)
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <Tabs defaultValue="text" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="text">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Paste Text
+                </TabsTrigger>
+                <TabsTrigger value="file">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload File
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Text Input Tab */}
+              <TabsContent value="text">
+                <form onSubmit={handleSubmit} className="space-y-4">
               {/* Textarea */}
               <div className="relative">
                 <textarea
@@ -212,6 +230,130 @@ const SummarizePage = () => {
                 </div>
               </div>
             </form>
+          </TabsContent>
+
+          {/* File Upload Tab */}
+          <TabsContent value="file">
+            <div className="space-y-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors">
+                <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <div className="mb-4">
+                  <label htmlFor="fileUpload" className="cursor-pointer">
+                    <span className="text-primary hover:underline font-medium">
+                      Click to upload
+                    </span>
+                    {' '}or drag and drop
+                  </label>
+                  <input
+                    id="fileUpload"
+                    type="file"
+                    accept=".txt,.docx"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedFile(file);
+                        setUploadError(null);
+                      }
+                    }}
+                    disabled={isCreating}
+                  />
+                </div>
+                <p className="text-sm text-gray-500">
+                  Supports .txt and .docx files (Max 10MB)
+                </p>
+              </div>
+
+              {selectedFile && (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="font-medium text-sm">{selectedFile.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {(selectedFile.size / 1024).toFixed(2)} KB
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setUploadError(null);
+                    }}
+                    disabled={isCreating}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+
+              {uploadError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{uploadError}</AlertDescription>
+                </Alert>
+              )}
+
+              {!hasCredits && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Insufficient credits. Please contact support to recharge your account.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {summaryError && summaryStatus === 'failed' && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{summaryError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex items-center justify-between pt-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <span>Cost: <strong>1 Credit</strong></span>
+                  <span className="text-gray-400">•</span>
+                  <span>Your Credits: <strong>{user?.credits || 0}</strong></span>
+                </div>
+
+                <Button
+                  onClick={async () => {
+                    if (!selectedFile) {
+                      setUploadError('Please select a file first');
+                      return;
+                    }
+                    if (!hasCredits) return;
+
+                    dispatch(clearCurrentSummary());
+                    try {
+                      await dispatch(createSummaryFromFile(selectedFile)).unwrap();
+                      setSelectedFile(null);
+                    } catch (error) {
+                      setUploadError(error.message || 'Failed to process file');
+                    }
+                  }}
+                  disabled={!selectedFile || isCreating || !hasCredits}
+                >
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload & Summarize
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
           </CardContent>
         </Card>
 

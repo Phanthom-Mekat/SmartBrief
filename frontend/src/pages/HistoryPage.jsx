@@ -87,7 +87,7 @@ const HistoryPage = () => {
 
         // Refresh the list
         dispatch(fetchSummaries({ page, limit: 10 }));
-      } catch (error) {
+      } catch {
         // Show error message
         Swal.fire({
           title: 'Error!',

@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { protect, checkCredits } = require('../middleware/authMiddleware');
 const { cacheMiddleware } = require('../middleware/cacheMiddleware');
+const upload = require('../config/fileUpload');
 const {
   createSummary,
+  createSummaryFromFile,
   getUserSummaries,
   getSummaryById,
   deleteSummary
@@ -24,6 +26,14 @@ const {
  * 4. createSummary: Generate new summary, deduct credit, cache result
  */
 router.post('/', protect, cacheMiddleware, checkCredits(1), createSummary);
+
+/**
+ * @route   POST /api/summaries/upload
+ * @desc    Create summary from uploaded file (.txt or .docx)
+ * @access  Private (requires authentication and 1 credit)
+ * @middleware  protect -> upload.single('file') -> cacheMiddleware -> checkCredits(1) -> createSummaryFromFile
+ */
+router.post('/upload', protect, upload.single('file'), cacheMiddleware, checkCredits(1), createSummaryFromFile);
 
 /**
  * @route   GET /api/summaries
