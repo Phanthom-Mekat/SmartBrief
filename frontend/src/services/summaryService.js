@@ -87,6 +87,24 @@ const summaryService = {
       throw new Error(message);
     }
   },
+
+  /**
+   * Regenerate summary with custom prompt
+   * @param {string} summaryId - Summary ID to regenerate
+   * @param {string} customPrompt - Optional custom instructions
+   * @returns {Promise<Object>} Regenerated summary data
+   */
+  async regenerateSummary(summaryId, customPrompt = null) {
+    try {
+      const response = await api.post(`/summaries/${summaryId}/regenerate`, {
+        customPrompt
+      });
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to regenerate summary';
+      throw new Error(message);
+    }
+  },
 };
 
 export default summaryService;

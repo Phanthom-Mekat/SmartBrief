@@ -1,7 +1,9 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize Groq client
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+});
 
 /**
  * Generate a summary using Google Gemini Flash model
@@ -25,46 +27,72 @@ const getSummary = async (text, options = {}) => {
     }
 
     // If no API key is provided, return mock summary
-    if (!process.env.GEMINI_API_KEY) {
-      console.warn('GEMINI_API_KEY not found, returning mock summary');
+    if (!process.env.GROQ_API_KEY) {
+      console.warn('GROQ_API_KEY not found, returning mock summary');
       return `This is a mock summary of the original text: ${text.substring(0, 100)}...`;
     }
 
-    // Get the model
-    const model = genAI.getGenerativeModel({ 
-      model: options.model || 'gemini-1.5-flash-latest',
-      generationConfig: {
-        temperature: 0.3, // Lower temperature for more focused summaries
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 1024,
-      },
-    });
+    // Calculate appropriate output length based on input (aim for 30-40% compression)
+    const inputWordCount = text.trim().split(/\s+/).length;
+    const targetOutputTokens = Math.max(2048, Math.min(8192, Math.ceil(inputWordCount * 0.6))); // 60% of input words as tokens (accounts for token overhead)
 
     // Create an effective prompt for summarization
-    const prompt = `
-Please provide a clear, concise summary of the following text. 
-The summary should:
-- Capture the main points and key information
-- Be approximately 25-30% of the original length
-- Maintain the important context and meaning
-- Use clear, professional language
-- Be well-structured and coherent
+    const defaultPrompt = `You are an expert text summarizer. Create a concise, comprehensive summary that is SHORTER than the original text.
 
-Text to summarize:
-"""
-${text}
-"""
+## KEY RULES:
 
-Summary:`;
+1. **COMPRESS THE TEXT**: Your summary MUST be 30-40% of the original word count. If the text is 100 words, your summary should be 30-40 words maximum.
 
-    // Generate the summary
+2. **BE CONCISE**: Use fewer words while capturing all main points. Remove redundancy, examples, and elaborations. Keep only essential information.
+
+3. **COMPLETE THOUGHTS**: Never stop mid-sentence. Finish your summary properly.
+
+4. **EXTRACT KEY POINTS**: 
+   - Identify the main topic or thesis
+   - Include only the most important facts and arguments
+   - Skip minor details, examples, and repetitions
+   - Combine related ideas into single sentences
+
+5. **PROFESSIONAL WRITING**: Use clear, formal language with proper grammar.
+
+6. **LENGTH TARGETS**:
+   - 100 words → 30-40 word summary
+   - 500 words → 150-200 word summary  
+   - 1000 words → 300-400 word summary
+   - 2000+ words → 600-800 word summary
+
+IMPORTANT: Your summary must be SIGNIFICANTLY SHORTER than the original. Focus on brevity while maintaining accuracy!`;
+
+    const customInstructions = options.customPrompt || defaultPrompt;
+
+    const systemPrompt = customInstructions;
+    const userPrompt = `Please summarize the following text:\n\n${text}`;
+
+    // Generate the summary using Groq
     const startTime = Date.now();
-    const result = await model.generateContent(prompt);
-    const endTime = Date.now();
+    
+    const completion = await groq.chat.completions.create({
+      model: options.model || "openai/gpt-oss-120b",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userPrompt
+        }
+      ],
+      temperature: 0.3, // Lower temperature for more focused, concise output
+      max_completion_tokens: targetOutputTokens,
+      top_p: 0.9, // Slightly lower for more deterministic output
+      reasoning_effort: "medium",
+      stream: false,
+      stop: null
+    });
 
-    const response = await result.response;
-    const summary = response.text();
+    const endTime = Date.now();
+    const summary = completion.choices[0]?.message?.content || '';
 
     // Log performance metrics
     const processingTime = endTime - startTime;
@@ -72,7 +100,18 @@ Summary:`;
 
     // Validate the response
     if (!summary || summary.length < 10) {
-      throw new Error('Generated summary is too short or empty');
+      console.warn('AI generated very short summary, using fallback');
+      return generateFallbackSummary(text);
+    }
+
+    // Check if summary seems complete (not cut off)
+    const summaryWordCount = summary.trim().split(/\s+/).length;
+    const originalWordCount = text.trim().split(/\s+/).length;
+    const compressionRatio = summaryWordCount / originalWordCount;
+    
+    // If summary is less than 10% of original, it might be cut off - log warning
+    if (compressionRatio < 0.10 && originalWordCount > 100) {
+      console.warn(`Summary seems very short (${(compressionRatio * 100).toFixed(1)}% of original). Consider using fallback.`);
     }
 
     return summary.trim();
@@ -109,15 +148,27 @@ Summary:`;
  * @returns {Object} - Fallback summary with statistics
  */
 const generateFallbackSummary = (text) => {
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
-  const summaryLength = Math.max(1, Math.floor(sentences.length * 0.3));
-  const selectedSentences = sentences.slice(0, summaryLength);
-  const summary = selectedSentences.join('. ').trim() + (selectedSentences.length > 0 ? '.' : '');
+  // Split into sentences, keeping only meaningful ones
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20);
+  
+  // Aim for 30-35% of original sentences
+  const summaryLength = Math.max(2, Math.floor(sentences.length * 0.35));
+  
+  // Take sentences from beginning, middle, and end for better coverage
+  const selectedSentences = [];
+  const segmentSize = Math.floor(sentences.length / summaryLength);
+  
+  for (let i = 0; i < summaryLength && i * segmentSize < sentences.length; i++) {
+    const sentenceIndex = Math.min(i * segmentSize, sentences.length - 1);
+    selectedSentences.push(sentences[sentenceIndex].trim());
+  }
+  
+  const summary = selectedSentences.join('. ') + '.';
   
   // Calculate word counts
   const originalWordCount = text.trim().split(/\s+/).length;
   const summaryWordCount = summary.trim().split(/\s+/).length;
-  const compressionRatio = Math.round((summaryWordCount / originalWordCount) * 100);
+  const compressionRatio = originalWordCount > 0 ? summaryWordCount / originalWordCount : 0;
   
   return {
     summary: summary,
@@ -159,12 +210,13 @@ const validateContent = (content) => {
  */
 const getServiceStatus = () => {
   return {
-    isConfigured: !!process.env.GEMINI_API_KEY,
-    model: 'gemini-1.5-flash-latest',
+    isConfigured: !!process.env.GROQ_API_KEY,
+    model: 'openai/gpt-oss-120b',
     maxInputLength: 50000,
     minInputLength: 50,
-    supportedFormats: ['text/plain'],
-    features: ['summarization', 'content-analysis']
+    maxOutputTokens: 8192,
+    supportedFormats: ['text/plain', '.txt', '.docx'],
+    features: ['summarization', 'content-analysis', 're-prompting']
   };
 };
 

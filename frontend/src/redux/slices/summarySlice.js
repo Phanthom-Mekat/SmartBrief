@@ -63,6 +63,21 @@ export const createSummaryFromFile = createAsyncThunk(
 );
 
 /**
+ * Async Thunk: Regenerate summary with custom prompt
+ */
+export const regenerateSummary = createAsyncThunk(
+  'summary/regenerateSummary',
+  async ({ summaryId, customPrompt }, { rejectWithValue }) => {
+    try {
+      const response = await summaryService.regenerateSummary(summaryId, customPrompt);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to regenerate summary');
+    }
+  }
+);
+
+/**
  * Summary Slice
  * Manages all state related to content summaries
  */
@@ -238,6 +253,26 @@ const summarySlice = createSlice({
         state.status = 'failed';
         state.error = action.payload || 'Failed to create summary from file';
         state.currentSummary = null;
+      })
+
+      // Regenerate Summary (does not cost credits)
+      .addCase(regenerateSummary.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(regenerateSummary.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.currentSummary = action.payload.summary;
+        state.error = null;
+        
+        if (action.payload.statistics) {
+          state.statistics = action.payload.statistics;
+        }
+        // Note: No credits are deducted for regeneration
+      })
+      .addCase(regenerateSummary.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Failed to regenerate summary';
       });
   },
 });

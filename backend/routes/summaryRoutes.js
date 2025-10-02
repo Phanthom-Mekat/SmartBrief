@@ -8,7 +8,8 @@ const {
   createSummaryFromFile,
   getUserSummaries,
   getSummaryById,
-  deleteSummary
+  deleteSummary,
+  regenerateSummary
 } = require('../controllers/summaryController');
 
 /**
@@ -48,6 +49,13 @@ router.get('/', protect, getUserSummaries);
  * @access  Private (user can only access their own summaries)
  */
 router.get('/:id', protect, getSummaryById);
+
+/**
+ * @route   POST /api/summaries/:id/regenerate
+ * @desc    Regenerate summary with custom prompt (no credit cost)
+ * @access  Private (user can only regenerate their own summaries)
+ */
+router.post('/:id/regenerate', protect, regenerateSummary);
 
 /**
  * @route   DELETE /api/summaries/:id

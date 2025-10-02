@@ -4,6 +4,7 @@ import { selectUser, updateUserCredits } from '../redux/slices/authSlice';
 import { 
   createSummary,
   createSummaryFromFile,
+  regenerateSummary,
   selectCurrentSummary, 
   selectSummaryStatus, 
   selectSummaryError,
@@ -15,7 +16,7 @@ import {
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Alert, AlertDescription } from '../components/ui/alert';
-import { Loader2, Sparkles, Copy, CheckCircle, FileText, Zap, AlertCircle, Upload, X } from 'lucide-react';
+import { Loader2, Sparkles, Copy, CheckCircle, FileText, Zap, AlertCircle, Upload, X, RefreshCw, Edit3 } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -40,6 +41,8 @@ const SummarizePage = () => {
   const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadError, setUploadError] = useState(null);
+  const [showPromptEditor, setShowPromptEditor] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState('');
 
   // Character count and validation
   const charCount = content.length;
@@ -93,6 +96,22 @@ const SummarizePage = () => {
     dispatch(clearCurrentSummary());
     dispatch(clearErrors());
     setCopied(false);
+    setCustomPrompt('');
+    setShowPromptEditor(false);
+  };
+
+  const handleRegenerate = async () => {
+    if (!currentSummary?.id) return;
+    
+    try {
+      await dispatch(regenerateSummary({ 
+        summaryId: currentSummary.id, 
+        customPrompt: customPrompt || null 
+      })).unwrap();
+      setShowPromptEditor(false);
+    } catch (error) {
+      console.error('Regeneration error:', error);
+    }
   };
 
   return (
@@ -366,32 +385,103 @@ const SummarizePage = () => {
                   <CardTitle className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-green-500" />
                     Summary Generated
+                    {currentSummary.regenerationCount > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        v{currentSummary.regenerationCount + 1}
+                      </Badge>
+                    )}
                   </CardTitle>
                   <CardDescription>
                     AI-powered summary using {currentSummary.aiModel || 'Gemini 1.5 Flash'}
+                    {currentSummary.customPrompt && ' • Custom prompt applied'}
                   </CardDescription>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopy}
-                  className="gap-2"
-                >
-                  {copied ? (
-                    <>
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" />
-                      Copy
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPromptEditor(!showPromptEditor)}
+                    className="gap-2"
+                    disabled={isCreating}
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    {showPromptEditor ? 'Cancel' : 'Re-prompt'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopy}
+                    className="gap-2"
+                  >
+                    {copied ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Custom Prompt Editor */}
+              {showPromptEditor && (
+                <div className="p-4 border rounded-lg bg-blue-50 space-y-3">
+                  <div className="flex items-start gap-2">
+                    <RefreshCw className="w-5 h-5 text-blue-600 mt-1" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm mb-1">Customize Summary Prompt</h4>
+                      <p className="text-xs text-gray-600 mb-3">
+                        Provide custom instructions to regenerate the summary. Leave empty to use default prompt. 
+                        <strong className="text-blue-700"> Free regeneration - no credits charged!</strong>
+                      </p>
+                      <textarea
+                        value={customPrompt}
+                        onChange={(e) => setCustomPrompt(e.target.value)}
+                        placeholder="Example: Summarize this in bullet points focusing on key technical details..."
+                        className="w-full min-h-[100px] p-3 border rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        disabled={isCreating}
+                      />
+                      <div className="flex justify-end gap-2 mt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setShowPromptEditor(false);
+                            setCustomPrompt('');
+                          }}
+                          disabled={isCreating}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleRegenerate}
+                          disabled={isCreating}
+                        >
+                          {isCreating ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Regenerating...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              Regenerate Summary
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Summary Text */}
               <div className="p-4 bg-white rounded-lg border">
                 <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">

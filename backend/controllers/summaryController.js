@@ -460,10 +460,114 @@ const createSummaryFromFile = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Regenerate summary with custom prompt
+ * @route   POST /api/summaries/:id/regenerate
+ * @access  Private (does not deduct credits - free regeneration)
+ */
+const regenerateSummary = async (req, res) => {
+  const startTime = Date.now();
+  
+  try {
+    const { id } = req.params;
+    const { customPrompt } = req.body;
+    const userId = req.user._id;
+
+    // Find the original summary
+    const summary = await Summary.findOne({ _id: id, user: userId });
+    
+    if (!summary) {
+      return res.status(404).json({
+        success: false,
+        message: 'Summary not found or access denied'
+      });
+    }
+
+    console.log(`Regenerating summary ${id} for user ${req.user.name}`);
+
+    // Generate new summary with custom prompt
+    let summarizedContent;
+    let summaryStats = {};
+    
+    try {
+      const result = await getSummary(summary.originalContent, {
+        customPrompt: customPrompt || null
+      });
+      
+      if (typeof result === 'string') {
+        summarizedContent = result;
+      } else if (result && typeof result === 'object') {
+        summarizedContent = result.summary;
+        summaryStats = {
+          originalWordCount: result.originalWordCount,
+          summaryWordCount: result.summaryWordCount,
+          compressionRatio: result.compressionRatio
+        };
+      }
+    } catch (aiError) {
+      console.error('AI regeneration failed:', aiError.message);
+      return res.status(503).json({
+        success: false,
+        message: 'AI summarization service is currently unavailable',
+        error: aiError.message
+      });
+    }
+
+    // Update the summary
+    summary.summarizedContent = summarizedContent;
+    summary.customPrompt = customPrompt || null;
+    summary.regenerationCount = (summary.regenerationCount || 0) + 1;
+    summary.processingTime = Date.now() - startTime;
+    
+    // Update stats if provided
+    if (Object.keys(summaryStats).length > 0) {
+      Object.assign(summary, summaryStats);
+    }
+
+    await summary.save();
+
+    console.log(`Summary regenerated successfully. Regeneration count: ${summary.regenerationCount}`);
+
+    // Prepare response data
+    const summaryData = {
+      id: summary._id,
+      originalWordCount: summary.originalWordCount,
+      summaryWordCount: summary.summaryWordCount,
+      compressionRatio: summary.compressionRatio,
+      summarizedContent: summary.summarizedContent,
+      customPrompt: summary.customPrompt,
+      regenerationCount: summary.regenerationCount,
+      processingTime: summary.processingTime,
+      createdAt: summary.createdAt,
+      updatedAt: summary.updatedAt,
+      aiModel: summary.aiModel,
+      status: summary.status
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Summary regenerated successfully',
+      data: {
+        summary: summaryData,
+        statistics: summary.statistics
+      }
+    });
+
+  } catch (error) {
+    console.error('Regenerate summary error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while regenerating summary',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createSummary,
   createSummaryFromFile,
   getUserSummaries,
   getSummaryById,
-  deleteSummary
+  deleteSummary,
+  regenerateSummary
 };

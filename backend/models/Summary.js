@@ -16,16 +16,13 @@ const summarySchema = new mongoose.Schema({
     required: true
   },
   originalWordCount: {
-    type: Number,
-    required: true
+    type: Number
   },
   summaryWordCount: {
-    type: Number,
-    required: true
+    type: Number
   },
   compressionRatio: {
-    type: Number, // Calculated as summaryWordCount / originalWordCount
-    required: true
+    type: Number // Calculated as summaryWordCount / originalWordCount
   },
   status: {
     type: String,
@@ -38,7 +35,7 @@ const summarySchema = new mongoose.Schema({
   },
   aiModel: {
     type: String,
-    default: 'gemini-1.5-flash'
+    default: 'openai/gpt-oss-120b'
   },
   uploadedFileName: {
     type: String,
@@ -47,6 +44,14 @@ const summarySchema = new mongoose.Schema({
   isFallback: {
     type: Boolean,
     default: false
+  },
+  customPrompt: {
+    type: String,
+    default: null
+  },
+  regenerationCount: {
+    type: Number,
+    default: 0
   }
 }, { 
   timestamps: true 
@@ -72,12 +77,15 @@ const countWords = (text) => {
 
 // Pre-save hook to calculate word counts and compression ratio
 summarySchema.pre('save', function(next) {
+  // Always calculate word counts if not already set (e.g., from fallback)
   if (this.originalContent && this.summarizedContent) {
-    this.originalWordCount = countWords(this.originalContent);
-    this.summaryWordCount = countWords(this.summarizedContent);
-    this.compressionRatio = this.originalWordCount > 0 
-      ? this.summaryWordCount / this.originalWordCount 
-      : 0;
+    if (!this.originalWordCount || !this.summaryWordCount) {
+      this.originalWordCount = countWords(this.originalContent);
+      this.summaryWordCount = countWords(this.summarizedContent);
+      this.compressionRatio = this.originalWordCount > 0 
+        ? this.summaryWordCount / this.originalWordCount 
+        : 0;
+    }
   }
   next();
 });
