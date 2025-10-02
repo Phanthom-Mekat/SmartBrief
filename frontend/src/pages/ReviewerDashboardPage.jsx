@@ -295,122 +295,177 @@ const ReviewerDashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold flex items-center gap-3">
-                <ClipboardCheck className="w-8 h-8" />
-                Reviewer Dashboard
-              </h1>
-              <p className="text-purple-100 mt-2">Review and provide feedback on content summaries</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Enhanced Header */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 rounded-2xl shadow-2xl">
+          <div className="absolute inset-0 bg-grid-white/10"></div>
+          <div className="relative px-8 py-10">
+            <div className="flex items-center justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                    <ClipboardCheck className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold text-white tracking-tight">
+                      Content Review Center
+                    </h1>
+                    <p className="text-purple-100 text-lg mt-1">
+                      Evaluate and provide feedback on AI-generated summaries
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-purple-100">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full">
+                    <UserIcon className="w-4 h-4" />
+                    <span className="font-medium">{user?.name}</span>
+                  </div>
+                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+                    {user?.role?.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  fetchStats();
+                  if (viewMode === 'pending') fetchPendingReviews('pending');
+                  else if (viewMode === 'all') fetchPendingReviews('all');
+                  else fetchMySummaries();
+                }}
+                className="bg-white text-purple-700 hover:bg-purple-50 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold"
+                size="lg"
+              >
+                <RefreshCw className={`w-5 h-5 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh Data
+              </Button>
             </div>
-            <Button
-              onClick={() => {
-                fetchStats();
-                if (viewMode === 'pending') fetchPendingReviews('pending');
-                else if (viewMode === 'all') fetchPendingReviews('all');
-                else fetchMySummaries();
-              }}
-              className="bg-white text-purple-600 hover:bg-purple-50"
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-l-4 border-l-yellow-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Pending Reviews</p>
-                  <p className="text-3xl font-bold text-yellow-600">
-                    {statistics.overall.pending}
-                  </p>
+        {/* Enhanced Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-yellow-50 to-orange-50 overflow-hidden group">
+            <CardContent className="pt-6 relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-300"></div>
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2.5 bg-yellow-500/20 rounded-xl">
+                    <AlertTriangle className="w-6 h-6 text-yellow-700" />
+                  </div>
+                  <p className="text-sm font-semibold text-yellow-900">Pending Reviews</p>
                 </div>
-                <AlertTriangle className="w-10 h-10 text-yellow-500 opacity-20" />
+                <p className="text-4xl font-bold text-yellow-700 mb-1">
+                  {statistics.overall.pending}
+                </p>
+                <p className="text-xs text-yellow-600">Awaiting your review</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-green-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Approved</p>
-                  <p className="text-3xl font-bold text-green-600">
-                    {statistics.overall.approved}
-                  </p>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden group">
+            <CardContent className="pt-6 relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-300"></div>
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2.5 bg-green-500/20 rounded-xl">
+                    <CheckCircle className="w-6 h-6 text-green-700" />
+                  </div>
+                  <p className="text-sm font-semibold text-green-900">Approved</p>
                 </div>
-                <CheckCircle className="w-10 h-10 text-green-500 opacity-20" />
+                <p className="text-4xl font-bold text-green-700 mb-1">
+                  {statistics.overall.approved}
+                </p>
+                <p className="text-xs text-green-600">Successfully reviewed</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-red-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Rejected</p>
-                  <p className="text-3xl font-bold text-red-600">
-                    {statistics.overall.rejected}
-                  </p>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-red-50 to-rose-50 overflow-hidden group">
+            <CardContent className="pt-6 relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-300"></div>
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2.5 bg-red-500/20 rounded-xl">
+                    <XCircle className="w-6 h-6 text-red-700" />
+                  </div>
+                  <p className="text-sm font-semibold text-red-900">Rejected</p>
                 </div>
-                <XCircle className="w-10 h-10 text-red-500 opacity-20" />
+                <p className="text-4xl font-bold text-red-700 mb-1">
+                  {statistics.overall.rejected}
+                </p>
+                <p className="text-xs text-red-600">Needs improvement</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-purple-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">My Reviews</p>
-                  <p className="text-3xl font-bold text-purple-600">
-                    {statistics.myReviews.total}
-                  </p>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-purple-50 to-indigo-50 overflow-hidden group">
+            <CardContent className="pt-6 relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-300"></div>
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2.5 bg-purple-500/20 rounded-xl">
+                    <TrendingUp className="w-6 h-6 text-purple-700" />
+                  </div>
+                  <p className="text-sm font-semibold text-purple-900">My Reviews</p>
                 </div>
-                <TrendingUp className="w-10 h-10 text-purple-500 opacity-20" />
+                <p className="text-4xl font-bold text-purple-700 mb-1">
+                  {statistics.myReviews.total}
+                </p>
+                <p className="text-xs text-purple-600">Total contributions</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Tabs */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="w-5 h-5" />
-              Review Summaries
-            </CardTitle>
-            <CardDescription>
-              Review, approve, reject, or request revisions for summaries
-            </CardDescription>
+        {/* Enhanced Tabs Section */}
+        <Card className="border-0 shadow-xl rounded-2xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2.5 text-2xl">
+                  <div className="p-2 bg-purple-600/10 rounded-lg">
+                    <Eye className="w-6 h-6 text-purple-700" />
+                  </div>
+                  Review Management
+                </CardTitle>
+                <CardDescription className="mt-2 text-base">
+                  Review, approve, reject, or request revisions for AI-generated summaries
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <Tabs value={viewMode} onValueChange={setViewMode} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="pending" className="flex items-center gap-2">
+              <TabsList className="grid w-full grid-cols-3 h-14 bg-gray-100/50 p-1.5 rounded-xl">
+                <TabsTrigger 
+                  value="pending" 
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg font-medium transition-all"
+                >
                   <AlertTriangle className="w-4 h-4" />
-                  Pending Reviews
+                  <span className="hidden sm:inline">Pending Reviews</span>
+                  <span className="sm:hidden">Pending</span>
                   {statistics.overall.pending > 0 && (
-                    <Badge variant="destructive" className="ml-1 rounded-full px-2 py-0">
+                    <Badge variant="destructive" className="ml-1 rounded-full px-2 py-0 text-xs font-bold">
                       {statistics.overall.pending}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="all" className="flex items-center gap-2">
+                <TabsTrigger 
+                  value="all" 
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg font-medium transition-all"
+                >
                   <FileText className="w-4 h-4" />
-                  All Summaries
+                  <span className="hidden sm:inline">All Summaries</span>
+                  <span className="sm:hidden">All</span>
                 </TabsTrigger>
-                <TabsTrigger value="mine" className="flex items-center gap-2">
+                <TabsTrigger 
+                  value="mine" 
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg font-medium transition-all"
+                >
                   <UserIcon className="w-4 h-4" />
-                  My Summaries
+                  <span className="hidden sm:inline">My Summaries</span>
+                  <span className="sm:hidden">Mine</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -432,7 +487,7 @@ const ReviewerDashboardPage = () => {
                 )}
 
                 {summaries.map((summary) => (
-                  <Card key={summary._id} className="border-l-4 border-l-yellow-500 hover:shadow-md transition-shadow">
+                  <Card key={summary._id} className="border-l-4 border-l-yellow-500 hover:shadow-xl transition-all duration-300 hover:scale-[1.01] bg-white">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -504,39 +559,45 @@ const ReviewerDashboardPage = () => {
                           </div>
                         </div>
 
-                        {/* Review Actions */}
-                        <div className="flex items-center gap-3 pt-4">
+                        {/* Enhanced Review Actions */}
+                        <div className="flex flex-col sm:flex-row items-stretch gap-3 pt-4">
                           <Button
                             onClick={() => handleReviewSubmit(summary._id, 'approved')}
                             disabled={actionLoading === summary._id}
-                            className="bg-green-600 hover:bg-green-700 text-white flex-1"
+                            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex-1 font-semibold"
+                            size="lg"
                           >
-                            <CheckCircle className="w-4 h-4 mr-2" />
+                            <CheckCircle className="w-5 h-5 mr-2" />
                             Approve
                           </Button>
                           <Button
                             onClick={() => handleReviewSubmit(summary._id, 'needs_revision')}
                             disabled={actionLoading === summary._id}
-                            className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
+                            className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex-1 font-semibold"
+                            size="lg"
                           >
-                            <AlertCircle className="w-4 h-4 mr-2" />
-                            Request Revision
+                            <AlertCircle className="w-5 h-5 mr-2" />
+                            <span className="hidden sm:inline">Request Revision</span>
+                            <span className="sm:hidden">Revision</span>
                           </Button>
                           <Button
                             onClick={() => handleReviewSubmit(summary._id, 'rejected')}
                             disabled={actionLoading === summary._id}
-                            variant="destructive"
-                            className="flex-1"
+                            className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex-1 font-semibold"
+                            size="lg"
                           >
-                            <XCircle className="w-4 h-4 mr-2" />
+                            <XCircle className="w-5 h-5 mr-2" />
                             Reject
                           </Button>
                           <Button
                             onClick={() => fetchReviewHistory(summary._id)}
                             variant="outline"
+                            className="border-2 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow-md font-semibold"
+                            size="lg"
                           >
-                            <History className="w-4 h-4 mr-2" />
-                            History
+                            <History className="w-5 h-5 mr-2" />
+                            <span className="hidden sm:inline">History</span>
+                            <span className="sm:hidden">Info</span>
                           </Button>
                         </div>
 
@@ -569,7 +630,7 @@ const ReviewerDashboardPage = () => {
                 )}
 
                 {summaries.map((summary) => (
-                  <Card key={summary._id} className="hover:shadow-md transition-shadow">
+                  <Card key={summary._id} className="hover:shadow-xl transition-all duration-300 hover:scale-[1.01] bg-white border-l-4 border-l-purple-200">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -678,7 +739,7 @@ const ReviewerDashboardPage = () => {
                 )}
 
                 {summaries.map((summary) => (
-                  <Card key={summary._id}>
+                  <Card key={summary._id} className="hover:shadow-lg transition-all duration-300 bg-white border-l-4 border-l-purple-300">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -743,14 +804,16 @@ const ReviewerDashboardPage = () => {
           </CardContent>
         </Card>
 
-        {/* Review History Modal */}
+        {/* Enhanced Review History Modal */}
         {showHistoryFor && reviewHistory && (
-          <Card className="fixed inset-0 z-50 m-8 overflow-auto bg-white shadow-2xl">
-            <CardHeader className="sticky top-0 bg-white border-b z-10">
+          <Card className="fixed inset-0 z-50 m-4 sm:m-8 overflow-auto bg-white shadow-2xl rounded-2xl">
+            <CardHeader className="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-b z-10 rounded-t-2xl">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <History className="w-5 h-5" />
-                  Review History
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <History className="w-6 h-6" />
+                  </div>
+                  Complete Review History
                 </CardTitle>
                 <Button
                   variant="ghost"
@@ -758,8 +821,9 @@ const ReviewerDashboardPage = () => {
                     setShowHistoryFor(null);
                     setReviewHistory(null);
                   }}
+                  className="text-white hover:bg-white/20 rounded-lg"
                 >
-                  <XCircle className="w-5 h-5" />
+                  <XCircle className="w-6 h-6" />
                 </Button>
               </div>
             </CardHeader>

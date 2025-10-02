@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { 
   Users, 
   CreditCard, 
@@ -117,11 +118,24 @@ const AdminDashboardPage = () => {
 
   // Recharge credits
   const handleRecharge = async (userId, userName) => {
-    const credits = prompt(`How many credits to add for ${userName}?`, '10');
-    if (!credits || isNaN(credits) || credits <= 0) {
-      alert('Invalid credit amount');
-      return;
-    }
+    const { value: credits, isConfirmed } = await Swal.fire({
+      title: `Add Credits to ${userName}`,
+      input: 'number',
+      inputLabel: 'Number of credits to add',
+      inputPlaceholder: 'Enter amount (e.g., 10)',
+      inputValue: 10,
+      showCancelButton: true,
+      confirmButtonText: 'Add Credits',
+      confirmButtonColor: '#3b82f6',
+      cancelButtonText: 'Cancel',
+      inputValidator: (value) => {
+        if (!value || isNaN(value) || value <= 0) {
+          return 'Please enter a valid positive number';
+        }
+      }
+    });
+
+    if (!isConfirmed) return;
 
     try {
       setActionLoading(userId);
@@ -139,13 +153,27 @@ const AdminDashboardPage = () => {
       const data = await response.json();
       
       if (response.ok) {
-        alert(`✅ Added ${credits} credits to ${userName}`);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Credits Added!',
+          text: `Successfully added ${credits} credits to ${userName}`,
+          timer: 2000,
+          showConfirmButton: false
+        });
         fetchUsers();
       } else {
-        alert(`❌ ${data.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: data.message || 'Failed to add credits'
+        });
       }
     } catch (err) {
-      alert('Error: ' + err.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message
+      });
     } finally {
       setActionLoading(null);
     }
@@ -153,20 +181,31 @@ const AdminDashboardPage = () => {
 
   // Change user role
   const handleChangeRole = async (userId, currentRole, userName) => {
-    const roles = ['user', 'admin', 'editor', 'reviewer'];
-    const newRole = prompt(
-      `Change role for ${userName}\nCurrent: ${currentRole}\nOptions: user, admin, editor, reviewer`,
-      currentRole
-    );
+    const roles = {
+      user: '👤 User - Standard access',
+      editor: '✏️ Editor - Can edit any summary',
+      reviewer: '👁️ Reviewer - Can review summaries',
+      admin: '🛡️ Admin - Full access'
+    };
 
-    if (!newRole || !roles.includes(newRole)) {
-      alert('Invalid role');
-      return;
-    }
+    const { value: newRole, isConfirmed } = await Swal.fire({
+      title: `Change Role for ${userName}`,
+      html: `<p class="text-sm text-gray-600 mb-4">Current role: <strong class="text-blue-600">${currentRole}</strong></p>`,
+      input: 'select',
+      inputOptions: roles,
+      inputValue: currentRole,
+      showCancelButton: true,
+      confirmButtonText: 'Change Role',
+      confirmButtonColor: '#3b82f6',
+      cancelButtonText: 'Cancel',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Please select a role';
+        }
+      }
+    });
 
-    if (newRole === currentRole) {
-      return;
-    }
+    if (!isConfirmed || newRole === currentRole) return;
 
     try {
       setActionLoading(userId);
@@ -184,13 +223,27 @@ const AdminDashboardPage = () => {
       const data = await response.json();
       
       if (response.ok) {
-        alert(`✅ Changed ${userName}'s role to ${newRole}`);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Role Changed!',
+          text: `${userName}'s role changed to ${newRole}`,
+          timer: 2000,
+          showConfirmButton: false
+        });
         fetchUsers();
       } else {
-        alert(`❌ ${data.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: data.message || 'Failed to change role'
+        });
       }
     } catch (err) {
-      alert('Error: ' + err.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message
+      });
     } finally {
       setActionLoading(null);
     }
@@ -198,9 +251,21 @@ const AdminDashboardPage = () => {
 
   // Delete user
   const handleDeleteUser = async (userId, userName) => {
-    if (!confirm(`⚠️ Delete user "${userName}"?\n\nThis action cannot be undone!`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Delete User?',
+      html: `
+        <p class="text-gray-700">Are you sure you want to delete <strong class="text-red-600">${userName}</strong>?</p>
+        <p class="text-sm text-gray-500 mt-2">This action cannot be undone!</p>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete user',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       setActionLoading(userId);
@@ -216,13 +281,27 @@ const AdminDashboardPage = () => {
       const data = await response.json();
       
       if (response.ok) {
-        alert(`✅ User ${userName} deleted successfully`);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: `User ${userName} has been deleted`,
+          timer: 2000,
+          showConfirmButton: false
+        });
         fetchUsers();
       } else {
-        alert(`❌ ${data.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: data.message || 'Failed to delete user'
+        });
       }
     } catch (err) {
-      alert('Error: ' + err.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message
+      });
     } finally {
       setActionLoading(null);
     }
@@ -252,15 +331,29 @@ const AdminDashboardPage = () => {
       const data = await response.json();
       
       if (response.ok) {
-        alert('✅ Summary updated successfully');
+        await Swal.fire({
+          icon: 'success',
+          title: 'Updated!',
+          text: 'Summary updated successfully',
+          timer: 2000,
+          showConfirmButton: false
+        });
         setEditingSummary(null);
         setEditContent('');
         fetchSummaries();
       } else {
-        alert(`❌ ${data.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: data.message || 'Failed to update summary'
+        });
       }
     } catch (err) {
-      alert('Error: ' + err.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message
+      });
     } finally {
       setActionLoading(null);
     }
@@ -268,9 +361,21 @@ const AdminDashboardPage = () => {
 
   // Delete summary
   const handleDeleteSummary = async (summaryId, ownerName) => {
-    if (!confirm(`⚠️ Delete this summary by ${ownerName}?\n\nThis action cannot be undone!`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Delete Summary?',
+      html: `
+        <p class="text-gray-700">Delete this summary by <strong>${ownerName}</strong>?</p>
+        <p class="text-sm text-gray-500 mt-2">This action cannot be undone!</p>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       setActionLoading(summaryId);
@@ -286,13 +391,27 @@ const AdminDashboardPage = () => {
       const data = await response.json();
       
       if (response.ok) {
-        alert('✅ Summary deleted successfully');
+        await Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: 'Summary has been deleted',
+          timer: 2000,
+          showConfirmButton: false
+        });
         fetchSummaries();
       } else {
-        alert(`❌ ${data.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: data.message || 'Failed to delete summary'
+        });
       }
     } catch (err) {
-      alert('Error: ' + err.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message
+      });
     } finally {
       setActionLoading(null);
     }
