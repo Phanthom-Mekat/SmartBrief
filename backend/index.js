@@ -16,7 +16,7 @@ const app = express();
 // Middleware
 app.use(express.json({ limit: '10mb' })); // Increased limit for large content
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://aismartbrief.vercel.app'], 
+  origin: ['http://localhost:5173', 'https://aismartsummary.netlify.app', 'https://aismartbrief.vercel.app'], 
   credentials: true,
 })); 
 app.use(cookieParser());

@@ -1,8 +1,8 @@
 # SmartBrief - AI-Powered Content Summarization
 
 > Full-stack MERN SaaS application with role-based access control, AI summarization, and credit system.
-
-**Live Demo**: [https://aismartbrief.vercel.app](https://aismartbrief.vercel.app)
+**Live Demo**: [https://aismartsummary.netlify.app](https://aismartsummary.netlify.app)
+**Bacnkend Demo**: [https://aismartbrief.vercel.app](https://aismartbrief.vercel.app)
 
 ---
 
