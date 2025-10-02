@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const { initializeRedis, closeRedis } = require('./config/redisClient');
 const { serverAdapter } = require('./config/queue');
+const { startCronJobs, stopCronJobs } = require('./services/cronService');
 const authRoutes = require('./routes/auth');
 const testRoutes = require('./routes/testRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -56,6 +57,9 @@ const startServer = async () => {
     // Initialize Redis (optional - app will work without it)
     await initializeRedis();
     
+    // Start cron jobs
+    startCronJobs();
+    
     // Start server
     const server = app.listen(PORT, () => {
       console.log(`SmartBrief server running on port ${PORT}`);
@@ -67,6 +71,9 @@ const startServer = async () => {
       
       server.close(async () => {
         console.log('HTTP server closed');
+        
+        // Stop cron jobs
+        stopCronJobs();
         
         // Close Redis connection
         await closeRedis();

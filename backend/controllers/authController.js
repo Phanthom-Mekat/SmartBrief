@@ -21,7 +21,7 @@ exports.registerUser = async (req, res) => {
     if (existingUser) {
       return res.status(409).json({ message: 'Email already in use.' });
     }
-    const user = new User({ name, email, password });
+    const user = new User({ name, email, password, lastActive: new Date() });
     await user.save();
     const token = generateToken(user);
     res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, credits: user.credits } });
@@ -45,6 +45,11 @@ exports.loginUser = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
+    
+    // Update lastActive timestamp on successful login
+    user.lastActive = new Date();
+    await user.save();
+    
     const token = generateToken(user);
     res.status(200).json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, credits: user.credits } });
   } catch (err) {

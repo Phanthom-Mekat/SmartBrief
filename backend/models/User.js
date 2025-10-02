@@ -27,6 +27,14 @@ const userSchema = new mongoose.Schema({
   credits: {
     type: Number,
     default: 5
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  lastActive: {
+    type: Date,
+    default: Date.now
   }
 }, { timestamps: true });
 

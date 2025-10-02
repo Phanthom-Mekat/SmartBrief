@@ -24,6 +24,13 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'User not found' });
       }
 
+      // Check if user account is active
+      if (req.user.isActive === false) {
+        return res.status(403).json({ 
+          message: 'Your account has been deactivated due to inactivity. Please contact support.' 
+        });
+      }
+
       next();
     } catch (error) {
       console.error('Token verification error:', error);
