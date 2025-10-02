@@ -1,6 +1,7 @@
 # SmartBrief - AI-Powered Content Summarization
 
 > Full-stack MERN SaaS application with role-based access control, AI summarization, and credit system.
+> 
 **Live Demo**: [https://aismartsummary.netlify.app](https://aismartsummary.netlify.app)
 **Bacnkend Demo**: [https://aismartbrief.vercel.app](https://aismartbrief.vercel.app)
 
@@ -52,7 +53,7 @@
 | Platform | Purpose |
 |----------|---------|
 | **Vercel** | Backend API (serverless functions) |
-| **Vercel** | Frontend hosting (static) |
+| **Netlify** | Frontend hosting (static) |
 | **MongoDB Atlas** | Cloud database |
 | **Upstash Redis** (optional) | Serverless Redis |
 
@@ -79,7 +80,7 @@
 - **FREE regeneration** with custom prompts
 - Admin can recharge credits via dashboard
 
-### 🤖 **AI Summarization** (`Groq API` - Llama 3.3)
+### 🤖 **AI Summarization** (`Groq API` - gpt-oss-120B)
 - Text input: 100-50,000 characters
 - File upload: `.txt` and `.docx` support
 - Compression ratio tracking
