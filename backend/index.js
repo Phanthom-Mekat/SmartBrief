@@ -10,7 +10,9 @@ const { startCronJobs, stopCronJobs } = require('./services/cronService');
 const authRoutes = require('./routes/auth');
 const testRoutes = require('./routes/testRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const adminSummaryRoutes = require('./routes/adminSummaryRoutes');
 const summaryRoutes = require('./routes/summaryRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -41,7 +43,9 @@ app.get('/', (req, res) => {
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/summaries', adminSummaryRoutes);
 app.use('/api/summaries', summaryRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api/test', testRoutes);
 
 // Bull Board - Queue monitoring dashboard (admin only in production)

@@ -5,6 +5,9 @@ import RegisterPage from "@/pages/RegisterPage";
 import DashboardPage from "@/pages/DashboardPage";
 import SummarizePage from "@/pages/SummarizePage";
 import HistoryPage from "@/pages/HistoryPage";
+import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import EditorDashboardPage from "@/pages/EditorDashboardPage";
+import ReviewerDashboardPage from "@/pages/ReviewerDashboardPage";
 import MainLayout from "@/layout/MainLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -47,6 +50,36 @@ const router = createBrowserRouter([
       <ProtectedRoute>
         <MainLayout>
           <HistoryPage />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <AdminDashboardPage />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/editor",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <EditorDashboardPage />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/reviewer",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <ReviewerDashboardPage />
         </MainLayout>
       </ProtectedRoute>
     ),

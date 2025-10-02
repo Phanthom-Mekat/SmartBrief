@@ -52,7 +52,41 @@ const summarySchema = new mongoose.Schema({
   regenerationCount: {
     type: Number,
     default: 0
-  }
+  },
+  // Review system fields
+  reviewStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'needs_revision'],
+    default: 'pending'
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  reviewedAt: {
+    type: Date,
+    default: null
+  },
+  reviewComments: {
+    type: String,
+    default: null
+  },
+  reviewHistory: [{
+    reviewer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    action: {
+      type: String,
+      enum: ['approved', 'rejected', 'needs_revision']
+    },
+    comments: String,
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, { 
   timestamps: true 
 });

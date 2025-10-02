@@ -70,6 +70,36 @@ const Navbar = () => {
                 >
                   History
                 </Button>
+                {/* Admin-only link */}
+                {user?.role === 'admin' && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/admin')}
+                    className="text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    Admin Panel
+                  </Button>
+                )}
+                {/* Editor-only link */}
+                {(user?.role === 'editor' || user?.role === 'admin') && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/editor')}
+                    className="text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    Manage Content
+                  </Button>
+                )}
+                {/* Reviewer-only link */}
+                {(user?.role === 'reviewer' || user?.role === 'admin') && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/reviewer')}
+                    className="text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                  >
+                    Review Content
+                  </Button>
+                )}
               </div>
 
               {/* Credits Display with Refresh */}
